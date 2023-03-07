@@ -136,7 +136,7 @@ These fields will be **returned for any data item**.
 | `websiteURI` | String | **Wikidata** Property "official website" (P856) | `https://www.un.org/` |
 | `embedURI` (SPECIAL CASE, TODO LATER!) | String | URI to be used for embedding inside the platform pages (eg. media details) | `https://embed.abgeordnetenwatch.de/profile/angela-merkel` |
 | `socialMediaIDs` | Array | **Wikidata** Properties for social media handles "??" | `[{"label": "Instagram", "id": "bundeskanzlerin"}]` |
-| `additionalInformation` | Object | eg. **Wikidata** Property "abgeordnetenwatch.de politician ID" | `{"abgeordnetenwatchID": "7643642"}` |
+| `additionalInformation` | Object | eg. **Wikidata** Property "abgeordnetenwatch.de politician ID" (P5355) | `{"abgeordnetenwatchID": "7643642"}` |
 
 #### Additional Type-Specific Data Fields
 These fields can be **returned in addition to Generic Data Fields**. 
