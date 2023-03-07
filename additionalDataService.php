@@ -1,8 +1,11 @@
 <?php
 error_reporting(E_ALL ^ E_NOTICE ^ E_WARNING);
 
+require_once(__DIR__."/config.php");
 
 function additionalDataService($input) {
+
+    global $config;
 
     $return["meta"]["api"]["version"]           = "1.0";
     $return["meta"]["api"]["documentation"]     = "https://github.com/OpenParliamentTV/OpenParliamentTV-Additional-Data-Service";
@@ -11,16 +14,10 @@ function additionalDataService($input) {
     $return["meta"]["requestStatus"]            = "error";
     //$return["links"]["self"]                    = "todo";
 
-    $input["language"] = strtolower(!empty($input["language"]) ? $input["language"] : "de");
-    $input["thumbWidth"] = strtolower(!empty($input["thumbWidth"]) ? $input["thumbWidth"] : "350");
+    $input["language"] = strtolower(!empty($input["language"]) ? $input["language"] : $config["thumb"]["defaultLanguage"]);
+    $input["thumbWidth"] = strtolower(!empty($input["thumbWidth"]) ? $input["thumbWidth"] : $config["thumb"]["defaultWidth"]);
 
-    $context = stream_context_create(
-        array(
-            "http" => array(
-                "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
-            )
-        )
-    );
+
 
     $allowedTypes = array("memberOfParliament", "person", "organisation", "legalDocument", "officialDocument", "term");
 
@@ -37,6 +34,161 @@ function additionalDataService($input) {
 
     switch ($input["type"]) {
 
+        case "officialDocument":
+
+            if (empty($input["id"]) && empty($input["dipID"])) {
+
+                $return["meta"]["requestStatus"] = "error";
+                $return["errors"][] = array("info"=>"wrong or missing parameter. id or dipID are required", "fields"=>"id,dipID");
+                return $return;
+
+            }
+
+            if (!empty($input["id"]) && empty($input["dipID"])) {
+
+                $tmpDoc = json_decode(file_get_contents($config["optvAPI"]."/document/".$input["id"]),true);
+
+                if (empty($tmpDoc["data"]["attributes"]["additionalInformation"]["originID"])) {
+
+                    $return["meta"]["requestStatus"] = "error";
+                    $return["errors"][] = array("info"=>"original document id was not found on platform with internal optv id", "fields"=>"id");
+                    return $return;
+
+                }
+                $input["dipID"] = $tmpDoc["data"]["attributes"]["additionalInformation"]["originID"];
+
+
+            }
+
+            try {
+
+                $dip = json_decode(file_get_contents("https://search.dip.bundestag.de/api/v1/drucksache/".$input["dipID"]."?format=json&apikey=".$config["dip-key"]),true);
+
+            } catch (Exception $e) {
+
+                $return["meta"]["requestStatus"] = "error";
+                $return["errors"][] = $e->getMessage();
+                return $return;
+
+            }
+
+            if ($dip["code"] == "404") {
+
+                $return["meta"]["requestStatus"] = "error";
+                $return["errors"][] = array("info"=>"document not found", "code"=>"404");
+                return $return;
+
+            }
+
+            if ($dip["code"] == "401") {
+
+                $return["meta"]["requestStatus"] = "error";
+                $return["errors"][] = array("info"=>$dip["message"], "code"=>"401");
+                return $return;
+
+            }
+
+            $return["meta"]["requestStatus"] = "success";
+            $return["data"] = $dip;
+
+
+        break;
+        case "organisation":
+        case "legalDocument":
+        case "term":
+
+            if ((empty($input["wikidataID"])) || (!preg_match("/(Q)\d+/i", $input["wikidataID"]))) {
+
+                $return["meta"]["requestStatus"] = "error";
+                $return["errors"][] = array("info"=>"wrong or missing parameter", "field"=>"wikidataID");
+                return $return;
+
+            }
+
+            $wikidataURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=claims|labels|aliases|sitelinks/urls&ids=".$input["wikidataID"];
+            //$return["data"]["tmpURL"] = $wikidataURL;
+            $wikidata = json_decode(file_get_contents($wikidataURL),true);
+
+            $return["data"]["type"]         = $input["type"];
+
+            $return["data"]["id"]           = $wikidata["entities"][$input["wikidataID"]]["id"];
+
+            $return["data"]["label"]        = $wikidata["entities"][$input["wikidataID"]]["labels"][$input["language"]]["value"];
+
+            foreach ($wikidata["entities"][$input["wikidataID"]]["aliases"][$input["language"]] as $alias) {
+
+                $return["data"]["labelAlternative"][] = $alias["value"];
+
+            }
+
+            $tmpWikipediaLabel = explode("wiki/",$wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["url"]);
+            $tmpWikipediaLabel = array_pop($tmpWikipediaLabel);
+
+            try {
+
+                $wikipedia = json_decode(file_get_contents("https://".$input["language"].".wikipedia.org/api/rest_v1/page/summary/".urlencode($tmpWikipediaLabel)),true);
+
+            } catch (Exception $e) {
+
+                $return["meta"]["requestStatus"] = "error";
+                $return["errors"][] = $e->getMessage();
+                return $return;
+
+            }
+
+            $return["data"]["abstract"] = $wikipedia["extract"];
+
+            $return["data"]["websiteURI"] = ($wikidata["entities"][$input["wikidataID"]]["claims"]["P856"][0]["mainsnak"]["datavalue"]["value"] ?: "");
+
+            $return["data"]["socialMediaIDs"] = array();
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["instagram"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["facebook"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["twitter"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["mastodon"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            $return["data"]["wikipedia"]["title"]   = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["title"];
+
+            $return["data"]["wikipedia"]["url"]     = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["url"];
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P154"][0]["mainsnak"]["datavalue"]["value"])) {
+                $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P154"][0]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
+                $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
+                $return["data"]["thumbnailCreator"] =  $tmpThumb["data"]["thumbnailCreator"];
+                $return["data"]["thumbnailLicense"] =  $tmpThumb["data"]["thumbnailLicense"];
+            }
+
+            /*if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P1454"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["legalForm"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P1454"][0]["mainsnak"]["datavalue"]["value"];
+
+            }*/
+            $return["meta"]["requestStatus"] = "success";
+
+
+        break;
+
+
+
 
         case "memberOfParliament":
         case "person":
@@ -51,12 +203,14 @@ function additionalDataService($input) {
 
             try {
 
-                $wikidata = json_decode(file_get_contents("https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=claims|labels|aliases|sitelinks/urls&ids=".$input["wikidataID"]),true);
+                $wikidataURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=claims|labels|aliases|sitelinks/urls&ids=".$input["wikidataID"];
+                //$return["data"]["tmpURL"] = $wikidataURL;
+                $wikidata = json_decode(file_get_contents($wikidataURL),true);
 
             } catch (Exception $e) {
 
                 $return["meta"]["requestStatus"] = "error";
-                $return["errors"][] = $e;
+                $return["errors"][] = $e->getMessage();
                 return $return;
 
             }
@@ -81,10 +235,40 @@ function additionalDataService($input) {
 
             }
 
-            //Names
-            $tmpWikidataPerson = json_decode(file_get_contents("https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=info|aliases|labels|descriptions|datatype&ids=".$wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"]."|".$wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"]."|".$wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"]."|".$wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"]),true);
+            $tmpWikidataPersonURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=info|aliases|labels|descriptions|datatype&ids=";
 
-            //$return["data"]["tmp"] = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=info|aliases|labels|descriptions|datatype&ids=".$wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"]."|".$wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"]."|".$wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"]."|".$wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            // givenName
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            }
+
+            // name
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            }
+
+            // degree
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            }
+
+            // gender
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            }
+
+            // party
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            }
+
+            $tmpWikidataPersonURL = $tmpWikidataPersonURL.implode("|",$tmpWikiRequest);
+
+
+
+            $tmpWikidataPerson = json_decode(file_get_contents($tmpWikidataPersonURL),true);
+
+            //$return["data"]["tmp"] = $tmpWikidataPersonURL;
 
             $return["data"]["firstName"]    = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
@@ -111,7 +295,7 @@ function additionalDataService($input) {
             } catch (Exception $e) {
 
                 $return["meta"]["requestStatus"] = "error";
-                $return["errors"][] = $e;
+                $return["errors"][] = $e->getMessage();
                 return $return;
 
             }
@@ -174,15 +358,13 @@ function additionalDataService($input) {
 
             }
 
-            //TODO: Mastodon
-
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P5355"])) {
 
                 $return["data"]["additionalInformation"]["abgeordnetenwatchID"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P5355"][0]["mainsnak"]["datavalue"]["value"];
 
             }
 
-            require_once (__DIR__."/utilities/xmlParser.class.php");
+            /*require_once (__DIR__."/utilities/xmlParser.class.php");
             $tmpXML = new xmlParser2();
             $tmpXMLStr = file_get_contents("https://magnus-toolserver.toolforge.org/commonsapi.php?languages=de&thumbwidth=".$input["thumbWidth"]."&image=".urlencode($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"]), false, $context);
             //echo $tmpXMLStr;
@@ -192,15 +374,34 @@ function additionalDataService($input) {
             $return["data"]["thumbnailURI"] =  $tmpImage["response"]["file"]["urls"]["thumbnail"];
             $return["data"]["thumbnailCreator"] =  $tmpImage["response"]["file"]["author"];
             $return["data"]["thumbnailLicense"] =  $tmpImage["response"]["licenses"]["license"]["name"];
+            */
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"])) {
+                $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
+                $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
+                $return["data"]["thumbnailCreator"] =  $tmpThumb["data"]["thumbnailCreator"];
+                $return["data"]["thumbnailLicense"] =  $tmpThumb["data"]["thumbnailLicense"];
+            }
+
 
             if ($input["type"] == "memberOfParliament") {
 
+
+                //TODO: Maybe use the abgeordnetenwatch mapping to wikidata id?
+                $return["data"]["partyID"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"];
+
+                $return["data"]["party"] = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
+
+                //$mapAbgeordnetenwatchPartyIDToWikidataID = json_decode(file_get_contents(__DIR__ . "/utilities/abgeordnetenwatchparty_to_wikidata.json"),true);
+
                 if (!empty($return["data"]["additionalInformation"]["abgeordnetenwatchID"])) {
+
+                    //$mapAbgeordnetenwatchPartyIDToWikidataID = json_decode(file_get_contents(__DIR__ . "/utilities/abgeordnetenwatchparty_to_wikidata.json"),true);
 
                     $tmpFactionInfos = json_decode(file_get_contents("https://www.abgeordnetenwatch.de/api/v2/candidacies-mandates?politician[entity.politician.id]=".$return["data"]["additionalInformation"]["abgeordnetenwatchID"]),true);
                     if (!empty($tmpFactionInfos["data"])) {
-                        $return["data"]["factionLabel1"] = $tmpFactionInfos["data"][0]["fraction_membership"][0]["label"];
-                        $return["data"]["factionLabel2"] = $tmpFactionInfos["data"][0]["fraction_membership"][0]["fraction"]["label"];
+                        $return["data"]["factionLabel"] = $tmpFactionInfos["data"][0]["fraction_membership"][0]["label"];
+                        //$return["data"]["factionLabel2"] = $tmpFactionInfos["data"][0]["fraction_membership"][0];
+                        $return["data"]["factionWikidataID"] = getFactionWikidataIDFromString($return["data"]["factionLabel"]);
                     }
 
                 }
@@ -218,6 +419,49 @@ function additionalDataService($input) {
 
     return $return;
 
+
+}
+
+function getThumbnailFromWikicommons($imageName, $thumbWidth) {
+
+    $context = stream_context_create(
+        array(
+            "http" => array(
+                "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+            )
+        )
+    );
+
+    require_once (__DIR__."/utilities/xmlParser.class.php");
+    $tmpXML = new xmlParser2();
+    $tmpXMLStr = file_get_contents("https://magnus-toolserver.toolforge.org/commonsapi.php?languages=de&thumbwidth=".$thumbWidth."&image=".urlencode($imageName), false, $context);
+    //echo $tmpXMLStr;
+    $tmpImage = $tmpXML->xml2array($tmpXMLStr);
+
+    //$return["data"]["thumbnailURI2"] =  $tmpImage;
+    $return["data"]["thumbnailURI"] =  $tmpImage["response"]["file"]["urls"]["thumbnail"];
+    $return["data"]["thumbnailCreator"] =  $tmpImage["response"]["file"]["author"];
+    $return["data"]["thumbnailLicense"] =  $tmpImage["response"]["licenses"]["license"]["name"];
+    $return["data"]["all"] =  $tmpImage;
+    return $return;
+
+
+}
+
+
+function getFactionWikidataIDFromString($string, $parliament = "de") {
+
+    $factions = json_decode(file_get_contents(__DIR__ . "/utilities/faction_to_wikidata_".$parliament.".json"),true);
+    $string = preg_replace("/[^a-z\d ]/i", '', $string);
+
+    foreach ($factions as $factionLabel=>$wikidataID) {
+
+        $factionLabel = preg_replace("/[^a-z\d ]/i", '', $factionLabel);
+
+        if (preg_match("~".$factionLabel."~",$string) || preg_match("~".$string."~",$factionLabel)) {
+            return $wikidataID;
+        }
+    }
 
 }
 ?>
