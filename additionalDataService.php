@@ -168,6 +168,12 @@ function additionalDataService($input) {
 
             }
 
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["mastodon"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
             //TODO: Mastodon
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P5355"])) {
@@ -177,7 +183,7 @@ function additionalDataService($input) {
             }
 
             require_once (__DIR__."/utilities/xmlParser.class.php");
-            $tmpXML = new xmlParser();
+            $tmpXML = new xmlParser2();
             $tmpXMLStr = file_get_contents("https://magnus-toolserver.toolforge.org/commonsapi.php?languages=de&thumbwidth=".$input["thumbWidth"]."&image=".urlencode($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"]), false, $context);
             //echo $tmpXMLStr;
             $tmpImage = $tmpXML->xml2array($tmpXMLStr);

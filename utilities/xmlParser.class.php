@@ -7,7 +7,7 @@
  * source https://stackoverflow.com/questions/6578084/how-to-convert-this-xml-request-into-array-in-php
  */
 
-class xmlParser
+class xmlParser2
 {
     public $ssBlankShow = true;
 
