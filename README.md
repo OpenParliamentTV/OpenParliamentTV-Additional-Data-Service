@@ -147,7 +147,7 @@ These fields can be **returned in addition to Generic Data Fields**.
 | `birthDate` | String | **Wikidata** Property "date of birth" (P569) | `1954-07-17` |
 | `party` | String | **Wikidata** Property "member of political party" (P102) | `Q49762` |
 | `faction` | String | **Wikidata** Property "member of the German Bundestag > parliamentary group" | `Q1023134` |
-| `gender` | String | **Wikidata** Property "sex or gender" (P512) | `female` |
+| `gender` | String | **Wikidata** Property "sex or gender" (P21) | `female` |
 | `firstName` | String | **Wikidata** Property "given name" (P735) | `Angela` |
 | `lastName` | String | **Wikidata** Property "family name" (P734) | `Merkel` |
 | `degree` | String | **Wikidata** Property "academic degree" (P512) | `Dr.` |
@@ -157,7 +157,7 @@ These fields can be **returned in addition to Generic Data Fields**.
 | Field | Type | Description | Examples | 
 | :------------- | :---------- | :---------- | :---------- | 
 | `birthDate` | String | **Wikidata** Property "date of birth" (P569) | `1960-01-26` |
-| `gender` | String | **Wikidata** Property "sex or gender" (P512) | `female` |
+| `gender` | String | **Wikidata** Property "sex or gender" (P21) | `female` |
 | `firstName` | String | **Wikidata** Property "given name" (P735) | `Inge` |
 | `lastName` | String | **Wikidata** Property "family name" (P734) | `Deutschkron` |
 | `degree` | String | **Wikidata** Property "academic degree" (P512) | `Dr.` |
