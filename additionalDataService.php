@@ -89,7 +89,20 @@ function additionalDataService($input) {
             }
 
             $return["meta"]["requestStatus"] = "success";
-            $return["data"] = $dip;
+            $return["data"]["id"] = $dip["id"];
+            $return["data"]["label"] = $dip["titel"];
+            $return["data"]["labelAlternative"] = array($dip["dokumentart"]." ".$dip["dokumentnummer"]);
+            $return["data"]["type"] = "officialDocument";
+            $return["data"]["sourceURI"] = $dip["fundstelle"]["pdf_url"];
+            $return["data"]["additionalInformation"]["originID"] = $dip["id"];
+            $return["data"]["additionalInformation"]["subType"] = $dip["drucksachetyp"];
+            $return["data"]["additionalInformation"]["date"] = $dip["datum"];
+            $return["data"]["additionalInformation"]["electoralPeriod"] = $dip["wahlperiode"];
+            $return["data"]["additionalInformation"]["creator"] = $dip["fundstelle"]["urheber"];
+            $return["data"]["additionalInformation"]["creator"] = array_merge(array(), $return["data"]["additionalInformation"]["creator"], $dip["autoren_anzeige"]);
+            $return["data"]["additionalInformation"]["procedureIDs"] = $dip["vorgangsbezug"];
+
+            $return["data"]["_sourceItem"] = $dip;
 
 
         break;
