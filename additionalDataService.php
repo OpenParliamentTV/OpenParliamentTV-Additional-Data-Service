@@ -191,7 +191,11 @@ function additionalDataService($input) {
 
                 if (!empty($return["data"]["additionalInformation"]["abgeordnetenwatchID"])) {
 
-                    //TODO
+                    $tmpFactionInfos = json_decode(file_get_contents("https://www.abgeordnetenwatch.de/api/v2/candidacies-mandates?politician[entity.politician.id]=".$return["data"]["additionalInformation"]["abgeordnetenwatchID"]),true);
+                    if (!empty($tmpFactionInfos["data"])) {
+                        $return["data"]["factionLabel1"] = $tmpFactionInfos["data"][0]["fraction_membership"][0]["label"];
+                        $return["data"]["factionLabel2"] = $tmpFactionInfos["data"][0]["fraction_membership"][0]["fraction"]["label"];
+                    }
 
                 }
 
