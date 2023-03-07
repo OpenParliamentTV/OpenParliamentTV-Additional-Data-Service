@@ -116,45 +116,49 @@ ___
 
 ___
 ### 3. Data Items
+
+More info on **Wikidata** Property Mappings can be found [here](https://github.com/OpenParliamentTV/OpenParliamentTV-NEL/blob/main/src/optv_nel/wikidata/mappings.py): 
+An example implementation for extracting the image attribution and license from **Wikimedia Commons** can be found [here](https://github.com/OpenParliamentTV/OpenParliamentTV-NEL/blob/main/src/optv_nel/wikimedia_commons/helpers.py).
+
 #### Generic Data Fields
 These fields will be **returned for any data item**. 
 
-| Field | Description | Examples | 
-| :------------- | :---------- | :---------- | 
-| `type` | see **2. Data Types** | `memberOfParliament` |
-| `id` | <Wikidata ID> | `Q567` |
-| `label` | <Wikidata Label> | `Angela Merkel` |
-| `labelAlternative` | Wikidata Property "short name" or "aliases" | `UN` |
-| `abstract` | Text Abstract | `Bundeskanzlerin der Bundesrepublik Deutschland seit 2005` |
-| `thumbnailURI` | Thumbnail Source URL | `https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Angela_Merkel._Tallinn_Digital_Summit.jpg/174px-Angela_Merkel._Tallinn_Digital_Summit.jpg` |
-| `thumbnailCreator` | Thumbnail Creator / Author / Attribution | `EU2017EE Estonian Presidency` |
-| `thumbnailLicense` | Thumbnail License | `CC-BY 2.0 Generic` |
-| `websiteURI` | Wikidata Property "official website" | `https://www.un.org/` |
-| `embedURI` (SPECIAL CASE, TODO LATER!) | URI to be used for embedding inside the platform pages (eg. media details) | `https://embed.abgeordnetenwatch.de/profile/angela-merkel` |
-| `socialMediaIDs` | Wikidata Property "??" | `[{"label": "Instagram", "id": "bundeskanzlerin"}]` |
-| `additionalInformation` | eg. Wikidata Property "abgeordnetenwatch.de politician ID" | `{"abgeordnetenwatchID": "7643642"}` |
+| Field | Type | Description | Examples | 
+| :------------- | :---------- | :---------- | :---------- | 
+| `type` | String | see **2. Data Types** | `memberOfParliament` |
+| `id` | String | <**Wikidata** ID> | `Q567` |
+| `label` | String | <**Wikidata** Label> | `Angela Merkel` |
+| `labelAlternative` | Array | **Wikidata** Property "short name" or "aliases" | `UN` |
+| `abstract` | String | Text Abstract from **Wikipedia** via MediaWiki API | `Bundeskanzlerin der Bundesrepublik Deutschland seit 2005` |
+| `thumbnailURI` | String | **Wikidata** Property "image" or "logo image" (P18 or P154) | `https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Angela_Merkel._Tallinn_Digital_Summit.jpg/174px-Angela_Merkel._Tallinn_Digital_Summit.jpg` |
+| `thumbnailCreator` | String | Thumbnail Creator / Author / Attribution via **Wikimedia Commons** | `EU2017EE Estonian Presidency` |
+| `thumbnailLicense` | String | Thumbnail License via **Wikimedia Commons** | `CC-BY 2.0 Generic` |
+| `websiteURI` | String | **Wikidata** Property "official website" (P856) | `https://www.un.org/` |
+| `embedURI` (SPECIAL CASE, TODO LATER!) | String | URI to be used for embedding inside the platform pages (eg. media details) | `https://embed.abgeordnetenwatch.de/profile/angela-merkel` |
+| `socialMediaIDs` | Array | **Wikidata** Properties for social media handles "??" | `[{"label": "Instagram", "id": "bundeskanzlerin"}]` |
+| `additionalInformation` | Object | eg. **Wikidata** Property "abgeordnetenwatch.de politician ID" | `{"abgeordnetenwatchID": "7643642"}` |
 
 #### Additional Type-Specific Data Fields
 These fields can be **returned in addition to Generic Data Fields**. 
 
 **Type:** `memberOfParliament`
-| Field | Description | Examples | 
-| :------------- | :---------- | :---------- | 
-| `birthDate` | Wikidata Property "date of birth" | `1954-07-17` |
-| `party` | Wikidata Property "member of political party" | `Q49762` |
-| `faction` | Wikidata Property "member of the German Bundestag > parliamentary group" | `Q1023134` |
-| `gender` | Wikidata Property "sex or gender"  (non-binary) | `female` |
-| `firstName` | Wikidata Property "given name" | `Angela` |
-| `lastName` | Wikidata Property "family name" | `Merkel` |
-| `degree` | Wikidata Property "academic degree" | `Dr.` |
+| Field | Type | Description | Examples | 
+| :------------- | :---------- | :---------- | :---------- | 
+| `birthDate` | String | **Wikidata** Property "date of birth" (P569) | `1954-07-17` |
+| `party` | String | **Wikidata** Property "member of political party" (P102) | `Q49762` |
+| `faction` | String | **Wikidata** Property "member of the German Bundestag > parliamentary group" | `Q1023134` |
+| `gender` | String | **Wikidata** Property "sex or gender" (P512) | `female` |
+| `firstName` | String | **Wikidata** Property "given name" (P735) | `Angela` |
+| `lastName` | String | **Wikidata** Property "family name" (P734) | `Merkel` |
+| `degree` | String | **Wikidata** Property "academic degree" (P512) | `Dr.` |
 
 
 **Type:** `person`
-| Field | Description | Examples | 
-| :------------- | :---------- | :---------- | 
-| `birthDate` | Wikidata Property "date of birth" | `1960-01-26` |
-| `gender` | Wikidata Property "sex or gender" (non-binary) | `female` |
-| `firstName` | Wikidata Property "given name" | `Inge` |
-| `lastName` | Wikidata Property "family name" | `Deutschkron` |
-| `degree` | Wikidata Property "academic degree" | `Dr.` |
+| Field | Type | Description | Examples | 
+| :------------- | :---------- | :---------- | :---------- | 
+| `birthDate` | String | **Wikidata** Property "date of birth" (P569) | `1960-01-26` |
+| `gender` | String | **Wikidata** Property "sex or gender" (P512) | `female` |
+| `firstName` | String | **Wikidata** Property "given name" (P735) | `Inge` |
+| `lastName` | String | **Wikidata** Property "family name" (P734) | `Deutschkron` |
+| `degree` | String | **Wikidata** Property "academic degree" (P512) | `Dr.` |
 
