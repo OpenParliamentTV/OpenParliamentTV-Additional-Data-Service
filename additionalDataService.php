@@ -249,6 +249,16 @@ function additionalDataService($input) {
                 $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
                 $return["data"]["thumbnailCreator"] =  getCleanWikimediaCommonsCreator($tmpThumb["data"]["thumbnailCreator"]);
                 $return["data"]["thumbnailLicense"] =  getCleanWikimediaCommonsLicense($tmpThumb["data"]["thumbnailLicense"]);
+
+            } elseif (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"])) {
+
+                $preferredImageKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"]);
+
+                $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][$preferredImageKey]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
+                $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
+                $return["data"]["thumbnailCreator"] =  getCleanWikimediaCommonsCreator($tmpThumb["data"]["thumbnailCreator"]);
+                $return["data"]["thumbnailLicense"] =  getCleanWikimediaCommonsLicense($tmpThumb["data"]["thumbnailLicense"]);
+
             }
 
             /*if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P1454"][0]["mainsnak"]["datavalue"]["value"])) {
