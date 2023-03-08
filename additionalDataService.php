@@ -329,7 +329,8 @@ function additionalDataService($input) {
 
             try {
 
-                $wikipedia = json_decode(file_get_contents("https://".$input["language"].".wikipedia.org/api/rest_v1/page/summary/".urlencode($tmpWikipediaLabel)),true);
+                //$wikipedia = json_decode(file_get_contents("https://".$input["language"].".wikipedia.org/api/rest_v1/page/summary/".urlencode($tmpWikipediaLabel)),true);
+                $wikipedia = json_decode(file_get_contents("https://".$input["language"].".wikipedia.org/api/rest_v1/page/summary/".str_replace("/", "%2F",$tmpWikipediaLabel)),true);
 
             } catch (Exception $e) {
 
