@@ -362,9 +362,9 @@ function additionalDataService($input) {
 
             //Will set it in the given language: $return["data"]["gender"]    = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
-            $return["data"]["wikipedia"]["title"]   = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["title"];
+            $return["data"]["additionalInformation"]["wikipedia"]["title"]   = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["title"];
 
-            $return["data"]["wikipedia"]["url"]     = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["url"];
+            $return["data"]["additionalInformation"]["wikipedia"]["url"]     = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["url"];
 
             $tmpWikipediaLabel = explode("wiki/",$wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["url"]);
             $tmpWikipediaLabel = array_pop($tmpWikipediaLabel);
