@@ -382,16 +382,26 @@ function additionalDataService($input) {
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"])) {
 
-                if ($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q6581097") {
+                //Trans men are men.
+                if (($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q6581097") || ($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q2449503")) {
 
                     $return["data"]["gender"] = "male";
 
-                } elseif ($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q6581072") {
+                //Trans women are women.
+                } elseif (($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q6581072") || ($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q1052281")) {
 
                     $return["data"]["gender"] = "female";
 
+                } elseif ($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q1097630") {
+                    //TODO
+                    $return["data"]["gender"] = "inter";
+
+                } elseif ($wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"] == "Q48270") {
+                    //TODO
+                    $return["data"]["gender"] = "non-binary";
+
                 }
-                //TODO: non-binary
+
 
             }
 
