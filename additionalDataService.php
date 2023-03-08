@@ -510,9 +510,9 @@ function additionalDataService($input) {
                     if (!empty($tmpFactionInfos["data"])) {
                         $return["data"]["factionLabel"] = $tmpFactionInfos["data"][0]["fraction_membership"][0]["label"];
                         //$return["data"]["factionLabel2"] = $tmpFactionInfos["data"][0]["fraction_membership"][0];
-                        $return["data"]["factionWikidataID"] = getFactionWikidataIDFromString($return["data"]["factionLabel"]);
+                        $return["data"]["factionID"] = getFactionWikidataIDFromString($return["data"]["factionLabel"]);
                     } else {
-                        $return["data"]["factionWikidataID"] = "Q4316268";
+                        $return["data"]["factionID"] = "Q4316268";
                     }
 
                 }
