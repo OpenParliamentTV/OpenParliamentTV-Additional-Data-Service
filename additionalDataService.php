@@ -415,8 +415,17 @@ function additionalDataService($input) {
             $return["data"]["thumbnailCreator"] =  $tmpImage["response"]["file"]["author"];
             $return["data"]["thumbnailLicense"] =  $tmpImage["response"]["licenses"]["license"]["name"];
             */
-            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"])) {
-                $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
+            //if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"])) {
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"])) {
+                $preferredImageKey = 0;
+                foreach ($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"] as $tmpKey=>$tmpValue) {
+                    if ($tmpValue["rank"] == "preferred") {
+                        $preferredImageKey = $tmpKey;
+                        break;
+                    }
+                }
+                $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][$preferredImageKey]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
                 $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
                 $return["data"]["thumbnailCreator"] =  $tmpThumb["data"]["thumbnailCreator"];
                 $return["data"]["thumbnailLicense"] =  $tmpThumb["data"]["thumbnailLicense"];
