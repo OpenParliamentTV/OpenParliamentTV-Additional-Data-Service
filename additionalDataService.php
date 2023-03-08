@@ -182,38 +182,38 @@ function additionalDataService($input) {
             $return["data"]["socialMediaIDs"] = array();
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["instagram"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][0]["mainsnak"]["datavalue"]["value"];
-
-            }
-
-            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["facebook"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredInstaKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"]);
+                $return["data"]["socialMediaIDs"]["instagram"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][$preferredInstaKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"])) {
+                $preferredFacebookKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"]);
+                $return["data"]["socialMediaIDs"]["facebook"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][$preferredFacebookKey]["mainsnak"]["datavalue"]["value"];
 
-                $return["data"]["socialMediaIDs"]["twitter"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"][0]["mainsnak"]["datavalue"]["value"];
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"][0]["mainsnak"]["datavalue"]["value"])) {
+                $preferredTwitterKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"]);
+                $return["data"]["socialMediaIDs"]["twitter"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"][$preferredTwitterKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["mastodon"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredMastodonKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"]);
+                $return["data"]["socialMediaIDs"]["mastodon"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][$preferredMastodonKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["youtube"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredYoutubeKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"]);
+                $return["data"]["socialMediaIDs"]["youtube"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][$preferredYoutubeKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["xing"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredXingKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"]);
+                $return["data"]["socialMediaIDs"]["xing"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][$preferredXingKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
@@ -229,13 +229,7 @@ function additionalDataService($input) {
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P154"])) {
 
-                $preferredLogoKey = 0;
-                foreach ($wikidata["entities"][$input["wikidataID"]]["claims"]["P154"] as $tmpKey=>$tmpValue) {
-                    if ($tmpValue["rank"] == "preferred") {
-                        $preferredLogoKey = $tmpKey;
-                        break;
-                    }
-                }
+                $preferredLogoKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P154"]);
 
                 $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P154"][$preferredLogoKey]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
                 $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
@@ -306,13 +300,7 @@ function additionalDataService($input) {
             // givenName
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"])) {
 
-                $preferredFirstNameKey = 0;
-                foreach ($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"] AS $tmpKey=>$tmpValue) {
-                    if ($tmpValue["rank"] == "preferred") {
-                        $preferredFirstNameKey = $tmpKey;
-                        break;
-                    }
-                }
+                $preferredFirstNameKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"]);
 
                 $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][$preferredFirstNameKey]["mainsnak"]["datavalue"]["value"]["id"];
             }
@@ -335,13 +323,7 @@ function additionalDataService($input) {
             // party
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"])) {
 
-                $preferredPartyKey = 0;
-                foreach ($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"] AS $tmpKey=>$tmpValue) {
-                    if ($tmpValue["rank"] == "preferred") {
-                        $preferredPartyKey = $tmpKey;
-                        break;
-                    }
-                }
+                $preferredPartyKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"]);
 
                 $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][$preferredPartyKey]["mainsnak"]["datavalue"]["value"]["id"];
 
@@ -432,26 +414,26 @@ function additionalDataService($input) {
             $return["data"]["socialMediaIDs"] = array();
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["instagram"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][0]["mainsnak"]["datavalue"]["value"];
-
-            }
-
-            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["facebook"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredInstaKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"]);
+                $return["data"]["socialMediaIDs"]["instagram"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2003"][$preferredInstaKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][0]["mainsnak"]["datavalue"]["value"])) {
+                $preferredFacebookKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"]);
+                $return["data"]["socialMediaIDs"]["facebook"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2013"][$preferredFacebookKey]["mainsnak"]["datavalue"]["value"];
 
-                $return["data"]["socialMediaIDs"]["twitter"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"][0]["mainsnak"]["datavalue"]["value"];
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"][0]["mainsnak"]["datavalue"]["value"])) {
+                $preferredTwitterKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"]);
+                $return["data"]["socialMediaIDs"]["twitter"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2002"][$preferredTwitterKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["mastodon"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredMastodonKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"]);
+                $return["data"]["socialMediaIDs"]["mastodon"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P4033"][$preferredMastodonKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
@@ -462,14 +444,14 @@ function additionalDataService($input) {
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["youtube"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredYoutubeKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"]);
+                $return["data"]["socialMediaIDs"]["youtube"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][$preferredYoutubeKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"])) {
-
-                $return["data"]["socialMediaIDs"]["xing"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"];
+                $preferredXingKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"]);
+                $return["data"]["socialMediaIDs"]["xing"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][$preferredXingKey]["mainsnak"]["datavalue"]["value"];
 
             }
 
@@ -487,13 +469,9 @@ function additionalDataService($input) {
             //if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"])) {
 
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"])) {
-                $preferredImageKey = 0;
-                foreach ($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"] as $tmpKey=>$tmpValue) {
-                    if ($tmpValue["rank"] == "preferred") {
-                        $preferredImageKey = $tmpKey;
-                        break;
-                    }
-                }
+
+                $preferredImageKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"]);
+
                 $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][$preferredImageKey]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
                 $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
                 $return["data"]["thumbnailCreator"] =  $tmpThumb["data"]["thumbnailCreator"];
@@ -563,6 +541,19 @@ function getThumbnailFromWikicommons($imageName, $thumbWidth) {
     $return["data"]["all"] =  $tmpImage;
     return $return;
 
+
+}
+
+function getPreferredArrayKey($array) {
+
+    $preferredKey = 0;
+    foreach ($array as $tmpKey=>$tmpValue) {
+        if ($tmpValue["rank"] == "preferred") {
+            $preferredKey = $tmpKey;
+            break;
+        }
+    }
+    return $preferredKey;
 
 }
 
