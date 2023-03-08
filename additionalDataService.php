@@ -146,6 +146,19 @@ function additionalDataService($input) {
 
             $return["data"]["label"]        = $wikidata["entities"][$input["wikidataID"]]["labels"][$input["language"]]["value"];
 
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P1813"])) {
+
+                $preferredShortKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P1813"]);
+
+                $return["data"]["label"]        = $wikidata["entities"][$input["wikidataID"]]["claims"]["P1813"][$preferredShortKey]["mainsnak"]["datavalue"]["value"]["text"];
+                $return["data"]["labelAlternative"][] = $wikidata["entities"][$input["wikidataID"]]["labels"][$input["language"]]["value"];
+
+            }
+
+
+
+
             foreach ($wikidata["entities"][$input["wikidataID"]]["aliases"][$input["language"]] as $alias) {
 
                 $return["data"]["labelAlternative"][] = $alias["value"];
