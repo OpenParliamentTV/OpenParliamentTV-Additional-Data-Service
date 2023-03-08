@@ -2,6 +2,7 @@
 error_reporting(E_ALL ^ E_NOTICE ^ E_WARNING);
 
 require_once(__DIR__."/config.php");
+require_once(__DIR__."/utilities/utilities.functions.php");
 
 function additionalDataService($input) {
 
@@ -246,8 +247,8 @@ function additionalDataService($input) {
 
                 $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P154"][$preferredLogoKey]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
                 $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
-                $return["data"]["thumbnailCreator"] =  $tmpThumb["data"]["thumbnailCreator"];
-                $return["data"]["thumbnailLicense"] =  $tmpThumb["data"]["thumbnailLicense"];
+                $return["data"]["thumbnailCreator"] =  getCleanWikimediaCommonsCreator($tmpThumb["data"]["thumbnailCreator"]);
+                $return["data"]["thumbnailLicense"] =  getCleanWikimediaCommonsLicense($tmpThumb["data"]["thumbnailLicense"]);
             }
 
             /*if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P1454"][0]["mainsnak"]["datavalue"]["value"])) {
@@ -476,8 +477,8 @@ function additionalDataService($input) {
 
                 $tmpThumb = getThumbnailFromWikicommons($wikidata["entities"][$input["wikidataID"]]["claims"]["P18"][$preferredImageKey]["mainsnak"]["datavalue"]["value"],$input["thumbWidth"]);
                 $return["data"]["thumbnailURI"] =  $tmpThumb["data"]["thumbnailURI"];
-                $return["data"]["thumbnailCreator"] =  $tmpThumb["data"]["thumbnailCreator"];
-                $return["data"]["thumbnailLicense"] =  $tmpThumb["data"]["thumbnailLicense"];
+                $return["data"]["thumbnailCreator"] =  getCleanWikimediaCommonsCreator($tmpThumb["data"]["thumbnailCreator"]);
+                $return["data"]["thumbnailLicense"] =  getCleanWikimediaCommonsLicense($tmpThumb["data"]["thumbnailLicense"]);
             }
 
 
@@ -538,8 +539,8 @@ function getThumbnailFromWikicommons($imageName, $thumbWidth) {
 
     //$return["data"]["thumbnailURI2"] =  $tmpImage;
     $return["data"]["thumbnailURI"] =  $tmpImage["response"]["file"]["urls"]["thumbnail"];
-    $return["data"]["thumbnailCreator"] =  $tmpImage["response"]["file"]["author"];
-    $return["data"]["thumbnailLicense"] =  $tmpImage["response"]["licenses"]["license"]["name"];
+    $return["data"]["thumbnailCreator"] =  getCleanWikimediaCommonsCreator($tmpImage["response"]["file"]["author"]);
+    $return["data"]["thumbnailLicense"] =  getCleanWikimediaCommonsLicense($tmpImage["response"]["licenses"]["license"]["name"]);
     $return["data"]["all"] =  $tmpImage;
     return $return;
 

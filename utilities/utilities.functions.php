@@ -1,4 +1,51 @@
 <?php
+/**
+ * Get clean Wikimedia Commons creator
+ *
+ * @param string $creatorString
+ * @return string
+ */
+function getCleanWikimediaCommonsCreator($creatorString) {
+    
+    $cleanCreatorString = "Wikimedia Commons";
+
+    if (isset($creatorString) && $creatorString !== null && $creatorString !== "") {
+        
+        $vcardCreatorRegex = '/id=\"creator\">(<bdi>.+<\/bdi>)/';
+        if (preg_match($vcardCreatorRegex, $creatorString, $matches)) {
+            if (count($matches) > 0 )
+            $creatorString = $matches[0];
+        }
+
+        $creatorString = preg_replace('/\\\n/', " ", $creatorString);
+        $creatorString = preg_replace('/<(?!\/?a).*?>/', "", $creatorString);
+
+        $cleanCreatorString = $creatorString;
+        
+    }
+
+    return $cleanCreatorString;
+}
+
+/**
+ * Get clean Wikimedia Commons license
+ *
+ * @param string $licenseString
+ * @return string
+ */
+function getCleanWikimediaCommonsLicense($licenseString) {
+    
+    $cleanLicenseString = "CC-BY-SA";
+
+    if (isset($licenseString) && $licenseString !== null && $licenseString !== "") {
+        
+        $cleanLicenseString = $licenseString;
+
+    }
+
+    return $cleanLicenseString;
+}
+
 /*
 * Replaces special characters in a string with their "non-special" counterpart.
 *
