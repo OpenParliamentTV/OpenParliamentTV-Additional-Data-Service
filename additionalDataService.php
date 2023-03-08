@@ -14,6 +14,24 @@ function additionalDataService($input) {
     $return["meta"]["requestStatus"]            = "error";
     //$return["links"]["self"]                    = "todo";
 
+    if ($config["accessNeedsKey"] == true) {
+
+        if (empty($input["key"])) {
+
+            $return["meta"]["requestStatus"] = "error";
+            $return["errors"][] = array("info"=>"key is needed but missing", "field"=>"key");
+            return $return;
+
+        } elseif (empty($config["keys"][$input["key"]]) || ($config["keys"][$input["key"]]["enabled"] != true)) {
+
+            $return["meta"]["requestStatus"] = "error";
+            $return["errors"][] = array("info"=>"key is wrong or disabled", "field"=>"key");
+            return $return;
+
+        }
+
+    }
+
     $input["language"] = strtolower(!empty($input["language"]) ? $input["language"] : $config["thumb"]["defaultLanguage"]);
     $input["thumbWidth"] = strtolower(!empty($input["thumbWidth"]) ? $input["thumbWidth"] : $config["thumb"]["defaultWidth"]);
 
