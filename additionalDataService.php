@@ -108,8 +108,8 @@ function additionalDataService($input) {
 
             $return["meta"]["requestStatus"] = "success";
             $return["data"]["id"] = $dip["id"];
-            $return["data"]["label"] = array($dip["dokumentart"]." ".$dip["dokumentnummer"]);
-            $return["data"]["labelAlternative"] = $dip["titel"];
+            $return["data"]["label"] = $dip["dokumentart"]." ".$dip["dokumentnummer"];
+            $return["data"]["labelAlternative"] = array($dip["titel"]);
             $return["data"]["type"] = "officialDocument";
             $return["data"]["sourceURI"] = $dip["fundstelle"]["pdf_url"];
             $return["data"]["additionalInformation"]["originID"] = $dip["id"];
