@@ -304,8 +304,17 @@ function additionalDataService($input) {
             $tmpWikidataPersonURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=info|aliases|labels|descriptions|datatype&ids=";
 
             // givenName
-            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
-                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"])) {
+
+                $preferredFirstNameKey = 0;
+                foreach ($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"] AS $tmpKey=>$tmpValue) {
+                    if ($tmpValue["rank"] == "preferred") {
+                        $preferredFirstNameKey = $tmpKey;
+                        break;
+                    }
+                }
+
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][$preferredFirstNameKey]["mainsnak"]["datavalue"]["value"]["id"];
             }
 
             // name
@@ -346,7 +355,8 @@ function additionalDataService($input) {
 
             //$return["data"]["tmp"] = $tmpWikidataPersonURL;
 
-            $return["data"]["firstName"]    = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
+
+            $return["data"]["firstName"]    = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][$preferredFirstNameKey]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
             $return["data"]["lastName"]     = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
