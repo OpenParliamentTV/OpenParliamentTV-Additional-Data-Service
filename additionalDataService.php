@@ -545,7 +545,7 @@ function getThumbnailFromWikicommons($imageName, $thumbWidth) {
 }
 
 function getPreferredArrayKey($array) {
-
+    //TODO: rank "deprecated"
     $preferredKey = 0;
     foreach ($array as $tmpKey=>$tmpValue) {
         if ($tmpValue["rank"] == "preferred") {
