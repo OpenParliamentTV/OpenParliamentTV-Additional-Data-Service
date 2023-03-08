@@ -297,8 +297,18 @@ function additionalDataService($input) {
             }
 
             // party
-            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
-                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"];
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"])) {
+
+                $preferredPartyKey = 0;
+                foreach ($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"] AS $tmpKey=>$tmpValue) {
+                    if ($tmpValue["rank"] == "preferred") {
+                        $preferredPartyKey = $tmpKey;
+                        break;
+                    }
+                }
+
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][$preferredPartyKey]["mainsnak"]["datavalue"]["value"]["id"];
+
             }
 
             $tmpWikidataPersonURL = $tmpWikidataPersonURL.implode("|",$tmpWikiRequest);
@@ -436,9 +446,9 @@ function additionalDataService($input) {
 
 
                 //TODO: Maybe use the abgeordnetenwatch mapping to wikidata id?
-                $return["data"]["partyID"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"];
+                $return["data"]["partyID"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][$preferredPartyKey]["mainsnak"]["datavalue"]["value"]["id"];
 
-                $return["data"]["party"] = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
+                $return["data"]["party"] = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][$preferredPartyKey]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
                 //$mapAbgeordnetenwatchPartyIDToWikidataID = json_decode(file_get_contents(__DIR__ . "/utilities/abgeordnetenwatchparty_to_wikidata.json"),true);
 
