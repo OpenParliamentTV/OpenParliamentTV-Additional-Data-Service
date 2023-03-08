@@ -205,6 +205,24 @@ function additionalDataService($input) {
 
             }
 
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["youtube"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["xing"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P6744"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["fragDenStaat"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P6744"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
             $return["data"]["wikipedia"]["title"]   = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["title"];
 
             $return["data"]["wikipedia"]["url"]     = $wikidata["entities"][$input["wikidataID"]]["sitelinks"][$input["language"]."wiki"]["url"];
@@ -420,6 +438,18 @@ function additionalDataService($input) {
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P5355"])) {
 
                 $return["data"]["additionalInformation"]["abgeordnetenwatchID"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P5355"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["youtube"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P2397"][0]["mainsnak"]["datavalue"]["value"];
+
+            }
+
+            if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["socialMediaIDs"]["xing"] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P6619"][0]["mainsnak"]["datavalue"]["value"];
 
             }
 
