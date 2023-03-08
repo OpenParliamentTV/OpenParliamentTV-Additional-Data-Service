@@ -157,8 +157,8 @@ function additionalDataService($input) {
 
             try {
 
-                $wikipedia = json_decode(file_get_contents("https://".$input["language"].".wikipedia.org/api/rest_v1/page/summary/".urlencode($tmpWikipediaLabel)),true);
-
+                $wikipedia = json_decode(file_get_contents("https://".$input["language"].".wikipedia.org/api/rest_v1/page/summary/".str_replace("/", "%2F",$tmpWikipediaLabel)),true);
+                //TODO: Check which chars has to be replaced. Umlauts seems to be okay. $return["data"]["abstract2"] ="https://".$input["language"].".wikipedia.org/api/rest_v1/page/summary/".str_replace("/", "%2F",$tmpWikipediaLabel);
             } catch (Exception $e) {
 
                 $return["meta"]["requestStatus"] = "error";
@@ -170,6 +170,14 @@ function additionalDataService($input) {
             $return["data"]["abstract"] = $wikipedia["extract"];
 
             $return["data"]["websiteURI"] = ($wikidata["entities"][$input["wikidataID"]]["claims"]["P856"][0]["mainsnak"]["datavalue"]["value"] ?: "");
+
+            if (empty($return["data"]["websiteURI"]) && $input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P7677"][0]["mainsnak"]["datavalue"]["value"])) {
+
+                $return["data"]["websiteURI"] =  "http://www.gesetze-im-internet.de/".$wikidata["entities"][$input["wikidataID"]]["claims"]["P7677"][0]["mainsnak"]["datavalue"]["value"]."/";
+
+            } elseif (empty($return["data"]["websiteURI"]) && $input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"])){
+                $return["data"]["websiteURI"] =  "https://www.buzer.de/gesetz/".$wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"]."/";
+            }
 
             $return["data"]["socialMediaIDs"] = array();
 
