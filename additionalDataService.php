@@ -55,15 +55,16 @@ function additionalDataService($input) {
 
         case "officialDocument":
 
-            if (empty($input["id"]) && empty($input["dipID"])) {
+
+            if (empty($input["id"]) && empty($input["dipID"]) && empty($input["sourceURI"])) {
 
                 $return["meta"]["requestStatus"] = "error";
-                $return["errors"][] = array("info"=>"wrong or missing parameter. id or dipID are required", "fields"=>"id,dipID");
+                $return["errors"][] = array("info"=>"wrong or missing parameter. id, dipID or sourceURI are required", "fields"=>"id,dipID");
                 return $return;
 
             }
 
-            if (!empty($input["id"]) && empty($input["dipID"])) {
+            if (!empty($input["id"]) && empty($input["dipID"]) && empty($input["sourceURI"])) {
 
                 $tmpDoc = json_decode(file_get_contents($config["optvAPI"]."/document/".$input["id"]),true);
 
@@ -78,20 +79,36 @@ function additionalDataService($input) {
 
 
             }
+            if (!empty($input["dipID"])) {
 
-            try {
+                try {
 
-                $dip = json_decode(file_get_contents("https://search.dip.bundestag.de/api/v1/drucksache/".$input["dipID"]."?format=json&apikey=".$config["dip-key"]),true);
+                    $dip = json_decode(file_get_contents("https://search.dip.bundestag.de/api/v1/drucksache/" . $input["dipID"] . "?format=json&apikey=" . $config["dip-key"]), true);
+                    //$return["dip"] = $dip;
 
-            } catch (Exception $e) {
+                } catch (Exception $e) {
 
-                $return["meta"]["requestStatus"] = "error";
-                $return["errors"][] = $e->getMessage();
-                return $return;
+                    $return["meta"]["requestStatus"] = "error";
+                    $return["errors"][] = $e->getMessage();
+                    return $return;
 
+                }
+
+            } else {
+
+                $tmpFilename = explode("/",$input["sourceURI"]);
+                $tmpFilename = array_pop($tmpFilename);
+                $tmpFilename = preg_replace("/\.pdf/i", "" ,$tmpFilename);
+                $tmpDocumentNumber1 = substr($tmpFilename, 0, 2);
+                $tmpDocumentNumber2 = substr($tmpFilename, 2);
+                $tmpFilename = $tmpDocumentNumber1."/".ltrim($tmpDocumentNumber2,"0");
+
+                $tmpDip = json_decode(file_get_contents("https://search.dip.bundestag.de/api/v1/drucksache?f.dokumentnummer=" . urlencode($tmpFilename) . "&format=json&apikey=" . $config["dip-key"]), true);
+                $dip = $tmpDip["documents"][0];
+                $dip["numFound"] = $tmpDip["numFound"];
             }
 
-            if ($dip["code"] == "404") {
+            if ((empty($dip["numFound"]) && $dip["code"] == "404") || (empty($dip["code"]) && $dip["numFound"] === 0)) {
 
                 $return["meta"]["requestStatus"] = "error";
                 $return["errors"][] = array("info"=>"document not found", "code"=>"404");
@@ -118,7 +135,11 @@ function additionalDataService($input) {
             $return["data"]["additionalInformation"]["date"] = $dip["datum"];
             $return["data"]["additionalInformation"]["electoralPeriod"] = $dip["wahlperiode"];
             $return["data"]["additionalInformation"]["creator"] = $dip["fundstelle"]["urheber"];
-            $return["data"]["additionalInformation"]["creator"] = array_merge(array(), $return["data"]["additionalInformation"]["creator"], (!empty($dip["autoren_anzeige"]) ?: array()));
+            if (!empty($dip["autoren_anzeige"])) {
+                foreach ($dip["autoren_anzeige"] as $tmpItem) {
+                    array_push($return["data"]["additionalInformation"]["creator"], $tmpItem);
+                }
+            }
             $return["data"]["additionalInformation"]["procedureIDs"] = $dip["vorgangsbezug"];
 
             $return["data"]["_sourceItem"] = $dip;
