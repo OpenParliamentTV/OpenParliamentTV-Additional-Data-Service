@@ -118,7 +118,7 @@ function additionalDataService($input) {
             $return["data"]["additionalInformation"]["date"] = $dip["datum"];
             $return["data"]["additionalInformation"]["electoralPeriod"] = $dip["wahlperiode"];
             $return["data"]["additionalInformation"]["creator"] = $dip["fundstelle"]["urheber"];
-            $return["data"]["additionalInformation"]["creator"] = array_merge(array(), $return["data"]["additionalInformation"]["creator"], $dip["autoren_anzeige"]);
+            $return["data"]["additionalInformation"]["creator"] = array_merge(array(), $return["data"]["additionalInformation"]["creator"], (!empty($dip["autoren_anzeige"]) ?: array()));
             $return["data"]["additionalInformation"]["procedureIDs"] = $dip["vorgangsbezug"];
 
             $return["data"]["_sourceItem"] = $dip;
