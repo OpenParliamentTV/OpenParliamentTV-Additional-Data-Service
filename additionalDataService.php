@@ -582,14 +582,39 @@ function getThumbnailFromWikicommons($imageName, $thumbWidth) {
 
 }
 
-function getPreferredArrayKey($array) {
+function getPreferredArrayKey($array, $lang = "de") {
     //TODO: rank "deprecated"
-    $preferredKey = 0;
+
+    $preferredKey = getLanguageArrayKey($array, $lang);
+
     foreach ($array as $tmpKey=>$tmpValue) {
         if ($tmpValue["rank"] == "preferred") {
             $preferredKey = $tmpKey;
             break;
         }
+    }
+    if ($array[$preferredKey]["rank"] == "deprecated") {
+        if ((count($array)-1) > $preferredKey) {
+            $preferredKey++;
+        }
+    }
+
+    return $preferredKey;
+
+}
+
+function getLanguageArrayKey($array, $lang = "de") {
+
+    $preferredKey = 0;
+    try {
+        foreach ($array as $tmpKey => $tmpValue) {
+            if (($tmpValue["mainsnak"]["datavalue"]["value"]["language"] == $lang) && $tmpValue["rank"] != "deprecated") {
+                $preferredKey = $tmpKey;
+                break;
+            }
+        }
+    } catch (Exception $e) {
+        $preferredKey = 0;
     }
     return $preferredKey;
 
