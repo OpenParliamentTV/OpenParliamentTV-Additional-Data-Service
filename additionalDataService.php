@@ -608,6 +608,11 @@ function getLanguageArrayKey($array, $lang = "de") {
     $preferredKey = 0;
     try {
         foreach ($array as $tmpKey => $tmpValue) {
+
+            //default english, gets overwritten if other $lang is given
+            if (($tmpValue["mainsnak"]["datavalue"]["value"]["language"] == "en") && $tmpValue["rank"] != "deprecated") {
+                $preferredKey = $tmpKey;
+            }
             if (($tmpValue["mainsnak"]["datavalue"]["value"]["language"] == $lang) && $tmpValue["rank"] != "deprecated") {
                 $preferredKey = $tmpKey;
                 break;
