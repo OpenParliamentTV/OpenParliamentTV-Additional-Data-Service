@@ -136,10 +136,12 @@ function additionalDataService($input) {
             $return["data"]["additionalInformation"]["electoralPeriod"] = $dip["wahlperiode"];
             $return["data"]["additionalInformation"]["creator"] = $dip["fundstelle"]["urheber"];
             if (!empty($dip["autoren_anzeige"])) {
-                foreach ($dip["autoren_anzeige"] as $tmpItem) {
-                    array_push($return["data"]["additionalInformation"]["creator"], $tmpItem);
-                }
-            }
+                $return["data"]["additionalInformation"]["author"] = $dip["autoren_anzeige"];
+
+                /*   foreach ($dip["autoren_anzeige"] as $tmpItem) {
+                       array_push($return["data"]["additionalInformation"]["creator"], $tmpItem);
+                   }*/
+           }
             $return["data"]["additionalInformation"]["procedureIDs"] = $dip["vorgangsbezug"];
 
             $return["data"]["_sourceItem"] = $dip;
