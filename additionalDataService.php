@@ -176,7 +176,9 @@ function additionalDataService($input) {
                 $preferredShortKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P1813"]);
 
                 $return["data"]["label"]        = $wikidata["entities"][$input["wikidataID"]]["claims"]["P1813"][$preferredShortKey]["mainsnak"]["datavalue"]["value"]["text"];
-                $return["data"]["labelAlternative"][] = $wikidata["entities"][$input["wikidataID"]]["labels"][$input["language"]]["value"];
+                if ($wikidata["entities"][$input["wikidataID"]]["labels"][$input["language"]]["value"] != $return["data"]["label"]) {
+                    $return["data"]["labelAlternative"][] = $wikidata["entities"][$input["wikidataID"]]["labels"][$input["language"]]["value"];
+                }
 
             }
 
@@ -184,8 +186,9 @@ function additionalDataService($input) {
 
 
             foreach ($wikidata["entities"][$input["wikidataID"]]["aliases"][$input["language"]] as $alias) {
-
-                $return["data"]["labelAlternative"][] = $alias["value"];
+                if (($alias["value"] != $return["data"]["label"]) && (!in_array($alias["value"], $return["data"]["labelAlternative"]))) {
+                    $return["data"]["labelAlternative"][] = $alias["value"];
+                }
 
             }
 
