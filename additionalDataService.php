@@ -209,7 +209,9 @@ function additionalDataService($input) {
 
             $return["data"]["abstract"] = $wikipedia["extract"];
 
-            $return["data"]["websiteURI"] = ($wikidata["entities"][$input["wikidataID"]]["claims"]["P856"][0]["mainsnak"]["datavalue"]["value"] ?: "");
+
+            $preferredWebsiteKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P856"]);
+            $return["data"]["websiteURI"] = ($wikidata["entities"][$input["wikidataID"]]["claims"]["P856"][$preferredWebsiteKey]["mainsnak"]["datavalue"]["value"] ?: "");
 
             if ($input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P7677"][0]["mainsnak"]["datavalue"]["value"])) {
 
@@ -218,7 +220,7 @@ function additionalDataService($input) {
             } elseif (empty($return["data"]["sourceURI"]) && $input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"])){
 
                 $return["data"]["sourceURI"] =  "https://www.buzer.de/gesetz/".$wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"]."/";
-                
+
             }
 
             $return["data"]["socialMediaIDs"] = array();
