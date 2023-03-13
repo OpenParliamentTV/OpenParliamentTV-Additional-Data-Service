@@ -211,12 +211,14 @@ function additionalDataService($input) {
 
             $return["data"]["websiteURI"] = ($wikidata["entities"][$input["wikidataID"]]["claims"]["P856"][0]["mainsnak"]["datavalue"]["value"] ?: "");
 
-            if (empty($return["data"]["websiteURI"]) && $input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P7677"][0]["mainsnak"]["datavalue"]["value"])) {
+            if ($input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P7677"][0]["mainsnak"]["datavalue"]["value"])) {
 
-                $return["data"]["websiteURI"] =  "http://www.gesetze-im-internet.de/".$wikidata["entities"][$input["wikidataID"]]["claims"]["P7677"][0]["mainsnak"]["datavalue"]["value"]."/";
+                $return["data"]["sourceURI"] =  "http://www.gesetze-im-internet.de/".$wikidata["entities"][$input["wikidataID"]]["claims"]["P7677"][0]["mainsnak"]["datavalue"]["value"]."/";
 
-            } elseif (empty($return["data"]["websiteURI"]) && $input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"])){
-                $return["data"]["websiteURI"] =  "https://www.buzer.de/gesetz/".$wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"]."/";
+            } elseif (empty($return["data"]["sourceURI"]) && $input["type"] == "legalDocument" && !empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"])){
+
+                $return["data"]["sourceURI"] =  "https://www.buzer.de/gesetz/".$wikidata["entities"][$input["wikidataID"]]["claims"]["P9696"][0]["mainsnak"]["datavalue"]["value"]."/";
+                
             }
 
             $return["data"]["socialMediaIDs"] = array();
