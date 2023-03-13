@@ -379,7 +379,9 @@ function additionalDataService($input) {
 
                 $preferredPartyKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"]);
 
-                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][$preferredPartyKey]["mainsnak"]["datavalue"]["value"]["id"];
+                if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][$preferredPartyKey]["mainsnak"]["datavalue"]["value"]["id"])) {
+                    $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P102"][$preferredPartyKey]["mainsnak"]["datavalue"]["value"]["id"];
+                }
 
             }
 
