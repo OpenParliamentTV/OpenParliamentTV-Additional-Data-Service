@@ -361,7 +361,8 @@ function additionalDataService($input) {
 
             // name
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"])) {
-                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"];
+                $preferredFamilyNameKey = getPreferredArrayKey($wikidata["entities"][$input["wikidataID"]]["claims"]["P734"]);
+                $tmpWikiRequest[] = $wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][$preferredFamilyNameKey]["mainsnak"]["datavalue"]["value"]["id"];
             }
 
             // degree
@@ -396,7 +397,7 @@ function additionalDataService($input) {
 
             $return["data"]["firstName"]    = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P735"][$preferredFirstNameKey]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
-            $return["data"]["lastName"]     = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
+            $return["data"]["lastName"]     = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P734"][$preferredFamilyNameKey]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
             $return["data"]["degreeFull"]   = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
