@@ -545,7 +545,8 @@ function additionalDataService($input) {
                         //$return["data"]["factionLabel2"] = $tmpFactionInfos["data"][0]["fraction_membership"][0];
                         $return["data"]["factionID"] = getFactionWikidataIDFromString($return["data"]["factionLabel"]);
                     } else {
-                        $return["data"]["factionID"] = "Q4316268";
+                        //$return["data"]["factionID"] = "Q4316268";
+                        $return["data"]["factionID"] = NULL;
                     }
 
                 }
