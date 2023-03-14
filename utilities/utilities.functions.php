@@ -20,7 +20,22 @@ function getCleanWikimediaCommonsCreator($creatorString) {
         $creatorString = preg_replace('/\\\n/', " ", $creatorString);
         $creatorString = preg_replace('/<(?!\/?a).*?>/', "", $creatorString);
 
+
         $cleanCreatorString = $creatorString;
+
+        preg_match("/(<a href=\".*wikimedia.*User:.*<\/a>)/Um", $cleanCreatorString, $matches);
+        if ($matches[1]) {
+            $cleanCreatorString = $matches[1];
+        } else {
+
+            preg_match("/(<a href=\".*wikimedia.*Creator:.*<\/a>)/Um", $cleanCreatorString, $matches);
+            if ($matches[1]) {
+
+                $cleanCreatorString = $matches[1];
+
+            }
+
+        }
         
     }
 

@@ -586,6 +586,7 @@ function getThumbnailFromWikicommons($imageName, $thumbWidth) {
     //$return["data"]["thumbnailURI2"] =  $tmpImage;
     $return["data"]["thumbnailURI"] =  $tmpImage["response"]["file"]["urls"]["thumbnail"];
     $return["data"]["thumbnailCreator"] =  getCleanWikimediaCommonsCreator($tmpImage["response"]["file"]["author"]);
+    //$return["data"]["thumbnailCreator"] =  $tmpImage["response"]["file"]["author"];
     $return["data"]["thumbnailLicense"] =  getCleanWikimediaCommonsLicense($tmpImage["response"]["licenses"]["license"]["name"]);
     $return["data"]["all"] =  $tmpImage;
     return $return;
