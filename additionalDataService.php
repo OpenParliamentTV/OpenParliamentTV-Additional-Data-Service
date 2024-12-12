@@ -349,7 +349,7 @@ function additionalDataService($input) {
 
             }
 
-            $tmpWikidataPersonURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=info|aliases|labels|descriptions|datatype&ids=";
+            $tmpWikidataPersonURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&languagefallback=true&format=json&props=info|aliases|labels|descriptions|datatype&ids=";
 
             // givenName
             if (!empty($wikidata["entities"][$input["wikidataID"]]["claims"]["P735"])) {
@@ -647,7 +647,8 @@ function getFactionWikidataIDFromString($string, $parliament = "de") {
 
         $factionLabel = preg_replace("/[^a-z\d ]/i", '', $factionLabel);
 
-        if (preg_match("~".$factionLabel."~",$string) || preg_match("~".$string."~",$factionLabel)) {
+        if (preg_match("~".$factionLabel."~i",$string) || preg_match("~".$string."~i",$factionLabel)) {
+
             return $wikidataID;
         }
     }
