@@ -160,7 +160,7 @@ function additionalDataService($input) {
 
             }
 
-            $wikidataURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=claims|labels|aliases|sitelinks/urls&ids=".$input["wikidataID"];
+            $wikidataURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&languagefallback=true&format=json&props=claims|labels|aliases|sitelinks/urls&ids=".$input["wikidataID"];
             //$return["data"]["tmpURL"] = $wikidataURL;
             $wikidata = json_decode(file_get_contents($wikidataURL),true);
 
@@ -317,7 +317,7 @@ function additionalDataService($input) {
 
             try {
 
-                $wikidataURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&format=json&props=claims|labels|aliases|sitelinks/urls&ids=".$input["wikidataID"];
+                $wikidataURL = "https://www.wikidata.org/w/api.php?action=wbgetentities&languages=".$input["language"]."&languagefallback=true&format=json&props=claims|labels|aliases|sitelinks/urls&ids=".$input["wikidataID"];
                 //$return["data"]["tmpURL"] = $wikidataURL;
                 $wikidata = json_decode(file_get_contents($wikidataURL),true);
 
