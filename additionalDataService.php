@@ -401,7 +401,8 @@ function additionalDataService($input) {
 
             $return["data"]["degreeFull"]   = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
 
-            $tmpDegree                      = explode(" ",$tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"]]["aliases"][$input["language"]][0]["value"]);
+            $degreeAlias = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P512"][0]["mainsnak"]["datavalue"]["value"]["id"]]["aliases"][$input["language"]][0]["value"] ?? "";
+            $tmpDegree                      = explode(" ", $degreeAlias);
             $return["data"]["degree"]       = reset($tmpDegree);
 
             //Will set it in the given language: $return["data"]["gender"]    = $tmpWikidataPerson["entities"][$wikidata["entities"][$input["wikidataID"]]["claims"]["P21"][0]["mainsnak"]["datavalue"]["value"]["id"]]["labels"][$input["language"]]["value"];
@@ -622,10 +623,10 @@ function getLanguageArrayKey($array, $lang = "de") {
         foreach ($array as $tmpKey => $tmpValue) {
 
             //default english, gets overwritten if other $lang is given
-            if (($tmpValue["mainsnak"]["datavalue"]["value"]["language"] == "en") && $tmpValue["rank"] != "deprecated") {
+            if (isset($tmpValue["mainsnak"]["datavalue"]["value"]["language"]) && ($tmpValue["mainsnak"]["datavalue"]["value"]["language"] == "en") && $tmpValue["rank"] != "deprecated") {
                 $preferredKey = $tmpKey;
             }
-            if (($tmpValue["mainsnak"]["datavalue"]["value"]["language"] == $lang) && $tmpValue["rank"] != "deprecated") {
+            if (isset($tmpValue["mainsnak"]["datavalue"]["value"]["language"]) && ($tmpValue["mainsnak"]["datavalue"]["value"]["language"] == $lang) && $tmpValue["rank"] != "deprecated") {
                 $preferredKey = $tmpKey;
                 break;
             }
