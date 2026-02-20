@@ -17,7 +17,7 @@ $config["keys"]["API-KEY"]["contact"] = "contact@example.com";
 $config["keys"]["API-KEY"]["info"] = "Key for company XY";
 
 /**
- * Openparliament TV API URL
+ * OpenParliamentTV Platform API URL
  */
 $config["optvAPI"] = "https://de.openparliament.tv/api/v1/";
 
@@ -37,6 +37,26 @@ $config["thumb"]["defaultWidth"] = "300";
  * Default language of no language was given
  */
 $config["thumb"]["defaultLanguage"] = "de";
+
+
+/**
+ * Response cache (SQLite-backed, full response caching).
+ *
+ * Set enabled to false to disable caching entirely.
+ * TTL is in seconds; 0 means the entry never expires.
+ * Use ?nocache=1 to force a fresh fetch and refresh the cache.
+ * The bypass only works when accessNeedsKey is true and a valid key is provided.
+ */
+$config["cache"]["enabled"]     = true;
+$config["cache"]["path"]        = __DIR__ . "/cache/cache.sqlite";
+$config["cache"]["bypassParam"] = "nocache";
+
+$config["cache"]["ttl"]["person"]             = 86400;  // 24 hours
+$config["cache"]["ttl"]["memberOfParliament"] = 86400;
+$config["cache"]["ttl"]["organisation"]       = 86400;
+$config["cache"]["ttl"]["term"]               = 86400;
+$config["cache"]["ttl"]["legalDocument"]      = 86400;
+$config["cache"]["ttl"]["officialDocument"]   = 0;      // never expires
 
 
 ?>
