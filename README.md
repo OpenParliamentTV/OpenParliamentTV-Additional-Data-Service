@@ -1,164 +1,231 @@
-## OpenParliamentTV-Additional-Data-Service: API (DRAFT)
+# OpenParliamentTV Additional Data Service
 
-### 1. Endpoints
+A PHP REST API that enriches OpenParliamentTV platform data from Wikidata, Wikipedia, Wikimedia Commons, Abgeordnetenwatch, and the German parliament document database (DIP).
 
-| Endpoint| Description | 
-| :------------- | :---------- | 
-| `/getAdditionalData` | Returns additional data objects based on either a **wikidataID** or a **documentID** |
-___
-#### Input / Parameters
-| Parameter | Required | Possible Values | 
-| :------------- | :---------- | :---------- | 
-| `type` | yes | see **2. Data Types**  |
-| `language` | yes | **Language Shortcode**, see [SHORTCODES](https://github.com/OpenParliamentTV/OpenParliamentTV-Architecture/blob/main/SHORTCODES.md) |
-| `wikidataID` | no | <any string> |
-| `documentID` | no | <any string> |
-| `parliament` | no | **Parliament Shortcode** to route parliament specific cases, see [SHORTCODES](https://github.com/OpenParliamentTV/OpenParliamentTV-Architecture/blob/main/SHORTCODES.md) |
+## Requirements
 
-#### Data Output 
-Responses **MUST** include the following properties for any request (GET **and** POST):
+- PHP 8.1+
+- No Composer required — plain `require_once` only
 
-```yaml
-{
-  "meta": {
-    "api": {
-      "version": "1.0",
-      "documentation": "https://example.com",
-      "license": {
-        "label": "ODC Open Database License (ODbL) v1.0",
-        "link": "https://opendatacommons.org/licenses/odbl/1-0/"
-      }
-    },
-    "requestStatus": "success" // OR "error"
-  },
-  "data": [], // {} OR []
-  "errors": [], // EITHER "data" OR "errors"
-  "links": {
-    "self": "https://example.com/getAdditionalData?type=person&language=de&wikidataID=Q567" // request URL
-  }
-}
+## Setup
+
+```bash
+cp config.sample.php config.php
+# Edit config.php and fill in your API keys
 ```
 
-**Successful** requests **MUST** include the following properties:
+### Configuration (`config.php`)
 
-```yaml
+| Key | Description |
+|-----|-------------|
+| `$config["accessNeedsKey"]` | Set to `true` to require API key auth |
+| `$config["keys"]` | Map of API keys (only needed when access control is on) |
+| `$config["optvAPI"]` | OpenParliamentTV platform API base URL |
+| `$config["dip-key"]` | DIP Bundestag API key — apply at [dip.bundestag.de](https://dip.bundestag.de/%C3%BCber-dip/hilfe/api) |
+| `$config["thumb"]["defaultWidth"]` | Default thumbnail width in pixels (default: `300`) |
+| `$config["thumb"]["defaultLanguage"]` | Default language code (default: `de`) |
+
+## Deployment
+
+Drop the repository root into your web root. `index.php` is the entry point and must remain at the root.
+
+## API Reference
+
+### Endpoint
+
+```
+GET /index.php
+```
+
+### Request Parameters
+
+| Parameter | Required | Description | Example |
+|-----------|----------|-------------|---------|
+| `type` | Yes | Data type | `memberOfParliament`, `person`, `organisation`, `legalDocument`, `officialDocument`, `term` |
+| `language` | No | Language code (default: `de`) | `de`, `en`, `fr` |
+| `wikidataID` | Conditional | Wikidata Q-ID | `Q567` |
+| `id` | Conditional | OPTV internal document ID | `12345` |
+| `dipID` | Conditional | DIP Bundestag document ID | `278452` |
+| `sourceURI` | Conditional | PDF source URL | `https://dserver.bundestag.de/btd/19/12345.pdf` |
+| `parliament` | No | Parliament shortcode for faction mapping | `de` |
+| `thumbWidth` | No | Thumbnail width in pixels (default: `300`) | `200` |
+| `key` | Conditional | API key (if access control enabled) | `abc123` |
+
+### Response Format
+
+**Success:**
+```json
 {
   "meta": {
     "api": {
       "version": "1.0",
-      "documentation": "https://example.com",
-      "license": {
-        "label": "ODC Open Database License (ODbL) v1.0",
-        "link": "https://opendatacommons.org/licenses/odbl/1-0/"
-      }
+      "documentation": "https://github.com/OpenParliamentTV/OpenParliamentTV-Additional-Data-Service",
+      "license": { "label": "ODC Open Database License (ODbL) v1.0", "link": "https://opendatacommons.org/licenses/odbl/1-0/" }
     },
     "requestStatus": "success"
   },
-  "data": {},
-  "links": {
-    "self": "https://example.com/getAdditionalData?type=person&language=de&wikidataID=Q567" // request URL
-  }
+  "data": { ... }
 }
 ```
 
-**Errors** **MUST** include the following properties:
-
-```yaml
+**Error:**
+```json
 {
-  "meta": {
-    "api": {
-      "version": "1.0",
-      "documentation": "https://example.com",
-      "license": {
-        "label": "ODC Open Database License (ODbL) v1.0",
-        "link": "https://opendatacommons.org/licenses/odbl/1-0/"
-      }
-    },
-    "requestStatus": "error"
+  "meta": { "api": { ... }, "requestStatus": "error" },
+  "errors": [{ "info": "wrong or missing parameter", "field": "wikidataID" }]
+}
+```
+
+### Data Types
+
+#### `person` / `memberOfParliament`
+
+Requires: `wikidataID`
+
+```json
+{
+  "type": "memberOfParliament",
+  "id": "Q567",
+  "label": "Angela Merkel",
+  "labelAlternative": ["Angie"],
+  "firstName": "Angela",
+  "lastName": "Merkel",
+  "degree": "Dr.",
+  "degreeFull": "Doktor der Naturwissenschaften",
+  "gender": "female",
+  "birthDate": "+1954-07-17T00:00:00Z",
+  "deathDate": null,
+  "abstract": "...",
+  "websiteURI": "https://www.bundeskanzlerin.de",
+  "thumbnailURI": "https://upload.wikimedia.org/...",
+  "thumbnailCreator": "EU2017EE Estonian Presidency",
+  "thumbnailLicense": "CC-BY 2.0",
+  "socialMediaIDs": [{"label": "Instagram", "id": "bundeskanzlerin"}],
+  "additionalInformation": {
+    "abgeordnetenwatchID": "79137",
+    "wikipedia": { "title": "Angela Merkel", "url": "https://de.wikipedia.org/wiki/Angela_Merkel" }
   },
-  "errors": [
-    {
-      "meta": {
-        "domSelector": "" // optional
-      },
-      "status": "422", // HTTP Status   
-      "code": "4", 
-      "title":  "Invalid Attribute",
-      "detail": "wikidataID must contain at least three characters."
-    }
-  ],
-  "links": {
-    "self": "https://example.com/getAdditionalData?type=person&language=de&wikidataID=Q5" // request URL
+  "partyID": "Q49762",
+  "party": "Christlich Demokratische Union Deutschlands",
+  "factionID": "Q1023134",
+  "factionLabel": "CDU/CSU-Fraktion"
+}
+```
+
+`partyID`, `party`, `factionID`, `factionLabel` are only present for `memberOfParliament`.
+
+#### `organisation` / `term` / `legalDocument`
+
+Requires: `wikidataID`
+
+```json
+{
+  "type": "organisation",
+  "id": "Q49762",
+  "label": "CDU",
+  "labelAlternative": ["Christlich Demokratische Union Deutschlands"],
+  "abstract": "...",
+  "websiteURI": "https://www.cdu.de",
+  "thumbnailURI": "...",
+  "thumbnailCreator": "...",
+  "thumbnailLicense": "...",
+  "socialMediaIDs": [...],
+  "additionalInformation": {
+    "wikipedia": { "title": "CDU", "url": "https://de.wikipedia.org/wiki/CDU" }
   }
 }
 ```
 
-| status | code | text | 
-| :------------- | :---------- | :---------- | 
-| `success` | 1 | Entity or document successfully found. |
-| `error` | 2 | No entity or document found. |
-| `error` | 3 | Parameters missing |
+`sourceURI` is added for `legalDocument` (built from Wikidata P7677 or P9696).
 
-For more info on the **data** object, see **3. Data Items**
-___
-### 2. Data Types
+#### `officialDocument`
 
-| Type| Description | Example | 
-| :------------- | :---------- |  :---------- | 
-| `memberOfParliament` | special case for members of a given parliament (in which we also have to derive the party and faction membership) | Angela Merkel |
-| `person` | any other person | Joe Biden |
-| `organisation` | any organisation (broadly defined as body in which a group of people organise themselves) | parties (SPD), factions (Bundestagsfraktion DIE LINKE), NGOs (Greenpeace, Sea Watch), companies (Biontech), initiatives (Fridays for Future), international organisations (WTO, UN), official bodies (EU Parliament, European Commission), legislative bodies (Bundesverfassungsgericht, Supreme Court) |
-| `legalDocument` | laws and legislative texts | Netzwerkdurchsetzungsgesetz, AGG, Grundgesetz |
-| `officialDocument` | parliament specific documents | Drucksache 19/2, § 1 Absatz 3 der Geschäftsordnung |
-| `term` | anything else which is not a person, organisation or document | Netzpolitik, Digitalpolitik, Richtlinienkompetenz, Subsidiaritätsprinzip, Europäischer Stabilitätsmechanismus, ESM, Entschliessungsantrag, Breitbandausbau, Operation MINUSMA |
+Requires: one of `dipID`, `id`, or `sourceURI`
 
-***Still to be defined: PLACES***
+```json
+{
+  "type": "officialDocument",
+  "id": "278452",
+  "label": "Drucksache 20/14748",
+  "labelAlternative": ["..."],
+  "sourceURI": "https://dserver.bundestag.de/btd/20/147/2014748.pdf",
+  "additionalInformation": {
+    "originID": "278452",
+    "subType": "Beschlussempfehlung",
+    "date": "2025-01-29",
+    "electoralPeriod": 20,
+    "creator": [...],
+    "procedureIDs": [...]
+  },
+  "_sourceItem": { ... }
+}
+```
 
-___
-### 3. Data Items
+## Data Sources
 
-More info on **Wikidata** Property Mappings can be found [here](https://github.com/OpenParliamentTV/OpenParliamentTV-NEL/blob/main/src/optv_nel/wikidata/mappings.py): 
-An example implementation for extracting the image attribution and license from **Wikimedia Commons** can be found [here](https://github.com/OpenParliamentTV/OpenParliamentTV-NEL/blob/main/src/optv_nel/wikimedia_commons/helpers.py).
+| Source | Used for |
+|--------|----------|
+| [Wikidata REST API](https://www.wikidata.org/w/rest.php/wikibase/v1) | Primary entity data (person, org, term, legalDocument) |
+| [Wikidata Action API](https://www.wikidata.org/w/api.php) | Batch label resolution (given name, family name, degree, party) |
+| [Wikipedia REST API](https://en.wikipedia.org/api/rest_v1/) | Text abstracts |
+| [Wikimedia Commons API](https://commons.wikimedia.org/w/api.php) | Thumbnail URLs, creator attribution, license |
+| [Abgeordnetenwatch API](https://www.abgeordnetenwatch.de/api/v2/) | Bundestag faction membership |
+| [DIP Bundestag API](https://search.dip.bundestag.de/api/v1/) | Official parliament documents |
 
-#### Generic Data Fields
-These fields will be **returned for any data item**. 
+## Directory Structure
 
-| Field | Type | Description | Examples | 
-| :------------- | :---------- | :---------- | :---------- | 
-| `type` | String | see **2. Data Types** | `memberOfParliament` |
-| `id` | String | <**Wikidata** ID> | `Q567` |
-| `label` | String | <**Wikidata** Label> | `Angela Merkel` |
-| `labelAlternative` | Array | **Wikidata** Property "short name" or "aliases" | `UN` |
-| `abstract` | String | Text Abstract from **Wikipedia** via MediaWiki API | `Bundeskanzlerin der Bundesrepublik Deutschland seit 2005` |
-| `thumbnailURI` | String | **Wikidata** Property "image" or "logo image" (P18 or P154) | `https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Angela_Merkel._Tallinn_Digital_Summit.jpg/174px-Angela_Merkel._Tallinn_Digital_Summit.jpg` |
-| `thumbnailCreator` | String | Thumbnail Creator / Author / Attribution via **Wikimedia Commons** | `EU2017EE Estonian Presidency` |
-| `thumbnailLicense` | String | Thumbnail License via **Wikimedia Commons** | `CC-BY 2.0 Generic` |
-| `websiteURI` | String | **Wikidata** Property "official website" (P856) | `https://www.un.org/` |
-| `embedURI` (SPECIAL CASE, TODO LATER!) | String | URI to be used for embedding inside the platform pages (eg. media details) | `https://embed.abgeordnetenwatch.de/profile/angela-merkel` |
-| `socialMediaIDs` | Array | **Wikidata** Properties for social media handles "??" | `[{"label": "Instagram", "id": "bundeskanzlerin"}]` |
-| `additionalInformation` | Object | eg. **Wikidata** Property "abgeordnetenwatch.de politician ID" (P5355) | `{"abgeordnetenwatchID": "7643642"}` |
+```
+/
+├── index.php                        # Entry point
+├── config.php                       # Local config (not in git)
+├── config.sample.php                # Config template
+├── src/
+│   ├── Api/
+│   │   ├── WikidataRestClient.php   # REST API client (primary entity fetches)
+│   │   ├── WikidataActionClient.php # Action API client (batch label resolution)
+│   │   ├── WikipediaClient.php
+│   │   ├── WikimediaCommonsClient.php
+│   │   ├── AbgeordnetenwatchClient.php
+│   │   └── DipBundestagClient.php
+│   ├── Handler/
+│   │   ├── PersonHandler.php        # person / memberOfParliament
+│   │   ├── OrganisationHandler.php  # organisation / term / legalDocument
+│   │   └── OfficialDocumentHandler.php
+│   ├── Response/
+│   │   └── ApiResponse.php          # Response builder
+│   └── Util/
+│       ├── WikidataProperties.php   # Property ID constants + gender map
+│       ├── StringHelper.php         # Creator/license string cleaning
+│       └── FactionMapper.php        # Faction label → Wikidata ID
+├── data/
+│   ├── faction_to_wikidata_de.json
+│   └── abgeordnetenwatch_party_to_wikidata.json
+└── tests/
+    ├── test_cases.php               # Shared test case definitions
+    ├── capture_fixtures.php         # Capture API output snapshots
+    └── compare_fixtures.php         # Compare output against snapshots
+```
 
-#### Additional Type-Specific Data Fields
-These fields can be **returned in addition to Generic Data Fields**. 
+## Testing
 
-**Type:** `memberOfParliament`
-| Field | Type | Description | Examples | 
-| :------------- | :---------- | :---------- | :---------- | 
-| `birthDate` | String | **Wikidata** Property "date of birth" (P569) | `1954-07-17` |
-| `party` | String | **Wikidata** Property "member of political party" (P102) | `Q49762` |
-| `faction` | String | **Wikidata** Property "member of the German Bundestag > parliamentary group" | `Q1023134` |
-| `gender` | String | **Wikidata** Property "sex or gender" (P21) | `female` |
-| `firstName` | String | **Wikidata** Property "given name" (P735) | `Angela` |
-| `lastName` | String | **Wikidata** Property "family name" (P734) | `Merkel` |
-| `degree` | String | **Wikidata** Property "academic degree" (P512) | `Dr.` |
+```bash
+# Start a local dev server from the repo root
+php -S localhost:8080 index.php
 
+# Capture current output as fixtures (do this before making changes)
+php tests/capture_fixtures.php http://localhost:8080/
 
-**Type:** `person`
-| Field | Type | Description | Examples | 
-| :------------- | :---------- | :---------- | :---------- | 
-| `birthDate` | String | **Wikidata** Property "date of birth" (P569) | `1960-01-26` |
-| `gender` | String | **Wikidata** Property "sex or gender" (P21) | `female` |
-| `firstName` | String | **Wikidata** Property "given name" (P735) | `Inge` |
-| `lastName` | String | **Wikidata** Property "family name" (P734) | `Deutschkron` |
-| `degree` | String | **Wikidata** Property "academic degree" (P512) | `Dr.` |
+# After making changes, compare against saved fixtures
+php tests/compare_fixtures.php http://localhost:8080/
 
+# Quick manual tests
+curl "http://localhost:8080/?type=person&wikidataID=Q567&language=de"
+curl "http://localhost:8080/?type=memberOfParliament&wikidataID=Q567&language=de"
+curl "http://localhost:8080/?type=organisation&wikidataID=Q49762&language=de"
+curl "http://localhost:8080/?type=officialDocument&dipID=278452"
+curl "http://localhost:8080/?type=legalDocument&wikidataID=Q105994&language=de"
+```
+
+## License
+
+AGPL-3.0 — see [LICENSE](LICENSE)
