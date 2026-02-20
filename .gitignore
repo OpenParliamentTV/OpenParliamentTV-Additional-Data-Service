@@ -20,3 +20,4 @@ pids
 config.php
 temp.*
 plans
+tests/fixtures/
