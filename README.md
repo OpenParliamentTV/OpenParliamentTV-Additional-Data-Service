@@ -20,14 +20,20 @@ cp config.sample.php config.php
 |-----|-------------|
 | `$config["accessNeedsKey"]` | Set to `true` to require API key auth |
 | `$config["keys"]` | Map of API keys (only needed when access control is on) |
-| `$config["optvAPI"]` | OpenParliamentTV platform API base URL |
+| `$config["optvAPI"]` | OpenParliamentTV platform API base URL — used to resolve OPTV internal document IDs to DIP IDs |
 | `$config["dip-key"]` | DIP Bundestag API key — apply at [dip.bundestag.de](https://dip.bundestag.de/%C3%BCber-dip/hilfe/api) |
 | `$config["thumb"]["defaultWidth"]` | Default thumbnail width in pixels (default: `300`) |
 | `$config["thumb"]["defaultLanguage"]` | Default language code (default: `de`) |
+| `$config["cache"]["enabled"]` | Set to `true` to enable SQLite response caching |
+| `$config["cache"]["path"]` | Path to the SQLite cache file (created automatically) |
+| `$config["cache"]["bypassParam"]` | Request param to force a fresh fetch (default: `nocache`) |
+| `$config["cache"]["ttl"][type]` | TTL per type in seconds; `0` = never expires |
 
 ## Deployment
 
 Drop the repository root into your web root. `index.php` is the entry point and must remain at the root.
+
+On Apache, `cache/.htaccess` (committed to the repository) blocks direct HTTP access to the SQLite cache file.
 
 ## API Reference
 
@@ -50,6 +56,7 @@ GET /index.php
 | `parliament` | No | Parliament shortcode for faction mapping | `de` |
 | `thumbWidth` | No | Thumbnail width in pixels (default: `300`) | `200` |
 | `key` | Conditional | API key (if access control enabled) | `abc123` |
+| `nocache` | No | Force a fresh fetch and refresh the cache (requires a valid `key` when access control is on) | `1` |
 
 ### Response Format
 
@@ -193,10 +200,13 @@ Requires: one of `dipID`, `id`, or `sourceURI`
 │   │   └── OfficialDocumentHandler.php
 │   ├── Response/
 │   │   └── ApiResponse.php          # Response builder
+│   ├── Cache/
+│   │   └── ResponseCache.php        # SQLite response cache
 │   └── Util/
 │       ├── WikidataProperties.php   # Property ID constants + gender map
 │       ├── StringHelper.php         # Creator/license string cleaning
 │       └── FactionMapper.php        # Faction label → Wikidata ID
+├── cache/                           # SQLite cache file (auto-created, not in git)
 ├── data/
 │   ├── faction_to_wikidata_de.json
 │   └── abgeordnetenwatch_party_to_wikidata.json
