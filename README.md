@@ -1,4 +1,4 @@
-# OpenParliamentTV Additional Data Service
+# Open Parliament TV - Additional Data Service
 
 A PHP REST API that enriches OpenParliamentTV platform data from Wikidata, Wikipedia, Wikimedia Commons, Abgeordnetenwatch, and the German parliament document database (DIP).
 
