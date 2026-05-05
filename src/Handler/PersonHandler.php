@@ -3,11 +3,11 @@
 class PersonHandler
 {
     public function __construct(
-        private WikidataRestClient       $restClient,
-        private WikidataActionClient     $actionClient,
-        private WikipediaClient          $wikipediaClient,
-        private WikimediaCommonsClient   $commonsClient,
-        private AbgeordnetenwatchClient  $awClient
+        private WikidataRestClient              $restClient,
+        private WikidataActionClient            $actionClient,
+        private WikipediaClient                 $wikipediaClient,
+        private WikimediaCommonsClient          $commonsClient,
+        private ?MemberFactionProviderInterface $factionProvider = null
     ) {}
 
     public function handle(array $input): array
@@ -133,19 +133,13 @@ class PersonHandler
             $data['partyID'] = $partyId;
             $data['party']   = $entities ? $this->actionClient->getLabel($entities, (string)$partyId, $language) : null;
 
-            if (!empty($data['additionalInformation']['abgeordnetenwatchID'])) {
-                $awResponse = $this->awClient->getCandidaciesMandates($data['additionalInformation']['abgeordnetenwatchID']);
-                if ($awResponse !== null && !empty($awResponse['data'])) {
-                    $factionLabel = $this->awClient->getFactionLabel($awResponse);
-                    if ($factionLabel !== null) {
-                        $data['factionLabel'] = $factionLabel;
-                        $mapper = new FactionMapper();
-                        $data['factionID'] = $mapper->getFactionWikidataID($factionLabel, $input['parliament'] ?? 'de');
-                    } else {
-                        $data['factionID'] = null;
+            if ($this->factionProvider !== null) {
+                $faction = $this->factionProvider->getMemberFaction($item, $input);
+                if ($faction !== null) {
+                    if ($faction['factionLabel'] !== null) {
+                        $data['factionLabel'] = $faction['factionLabel'];
                     }
-                } else {
-                    $data['factionID'] = null;
+                    $data['factionID'] = $faction['factionID'];
                 }
             }
         }

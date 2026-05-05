@@ -4,7 +4,7 @@ class FactionMapper
 {
     private array $cache = [];
 
-    public function getFactionWikidataID(string $label, string $parliament = 'de'): ?string
+    public function getFactionWikidataID(string $label, string $parliament = 'DE'): ?string
     {
         $factions = $this->loadMapping($parliament);
         $normalized = preg_replace('/[^a-z\d ]/i', '', $label);
@@ -22,12 +22,25 @@ class FactionMapper
 
     private function loadMapping(string $parliament): array
     {
-        if (!isset($this->cache[$parliament])) {
-            $path = __DIR__ . '/../../data/faction_to_wikidata_' . $parliament . '.json';
-            $raw  = @file_get_contents($path);
-            $this->cache[$parliament] = $raw ? json_decode($raw, true) ?? [] : [];
+        $key = strtoupper($parliament);
+        if (isset($this->cache[$key])) {
+            return $this->cache[$key];
         }
 
-        return $this->cache[$parliament];
+        $base = __DIR__ . '/../../data/faction_to_wikidata_';
+        $path = $base . $key . '.json';
+        if (!is_file($path)) {
+            // Deprecated lowercase fallback (one-release transition)
+            $legacy = $base . strtolower($parliament) . '.json';
+            if (is_file($legacy)) {
+                error_log("FactionMapper: lowercase data file '{$legacy}' is deprecated; rename to uppercase ('{$path}').");
+                $path = $legacy;
+            }
+        }
+
+        $raw = @file_get_contents($path);
+        $this->cache[$key] = $raw ? json_decode($raw, true) ?? [] : [];
+
+        return $this->cache[$key];
     }
 }

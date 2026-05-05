@@ -85,8 +85,11 @@ function fixtureFilename(array $params): string
 {
     if (empty($params)) return 'error_no_params.json';
     $parts = [];
-    foreach (['type', 'wikidataID', 'dipID', 'language'] as $k) {
+    foreach (['type', 'parliament', 'wikidataID', 'language'] as $k) {
         if (!empty($params[$k])) $parts[] = $params[$k];
     }
+    // documentID and dipID are aliases — same filename either way.
+    $docId = $params['documentID'] ?? $params['dipID'] ?? '';
+    if (!empty($docId)) $parts[] = $docId;
     return implode('_', $parts) . '.json';
 }

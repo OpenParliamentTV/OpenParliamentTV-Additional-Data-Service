@@ -30,6 +30,7 @@ class WikidataProperties
     const FRAGDENSTAAT        = 'P6744';
     const GESETZE_IM_INTERNET = 'P7677';
     const BUZER               = 'P9696';
+    const RIKSDAGEN           = 'P1214';
 
     // Gender Q-IDs
     const GENDER_MALE         = 'Q6581097';

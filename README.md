@@ -20,8 +20,9 @@ cp config.sample.php config.php
 |-----|-------------|
 | `$config["accessNeedsKey"]` | Set to `true` to require API key auth |
 | `$config["keys"]` | Map of API keys (only needed when access control is on) |
-| `$config["optvAPI"]` | OpenParliamentTV platform API base URL — used to resolve OPTV internal document IDs to DIP IDs |
-| `$config["dip-key"]` | DIP Bundestag API key — apply at [dip.bundestag.de](https://dip.bundestag.de/%C3%BCber-dip/hilfe/api) |
+| `$config["optvAPI"]` | OpenParliamentTV platform API base URL — used to resolve OPTV internal document IDs. Per-parliament overrides may be set under `$config["parliaments"][<CODE>]["optvAPI"]`. |
+| `$config["parliaments"][<CODE>]` | Per-parliament provider configuration. `providers.memberFaction` and `providers.officialDocument` select upstream backends; `apiKeys` holds keys per provider. See `config.sample.php` for the full schema. |
+| `$config["dip-key"]` | **Deprecated** — use `$config["parliaments"]["DE"]["apiKeys"]["dipBundestag"]`. Kept as a fallback for one release. |
 | `$config["thumb"]["defaultWidth"]` | Default thumbnail width in pixels (default: `300`) |
 | `$config["thumb"]["defaultLanguage"]` | Default language code (default: `de`) |
 | `$config["cache"]["enabled"]` | Set to `true` to enable SQLite response caching |
@@ -37,6 +38,8 @@ On Apache, `cache/.htaccess` (committed to the repository) blocks direct HTTP ac
 
 ## API Reference
 
+The full API contract — request parameters, response shapes per type, and error envelopes — is documented as an OpenAPI 3.1 spec at [`docs/openapi.yaml`](docs/openapi.yaml). When the deployment exposes the `docs/` directory statically, [`docs/index.html`](docs/index.html) renders the spec via Swagger UI for interactive browsing.
+
 ### Endpoint
 
 ```
@@ -48,12 +51,13 @@ GET /index.php
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
 | `type` | Yes | Data type | `memberOfParliament`, `person`, `organisation`, `legalDocument`, `officialDocument`, `term` |
-| `language` | No | Language code (default: `de`) | `de`, `en`, `fr` |
+| `parliament` | Yes | Parliament shortcode (ISO 3166 Alpha-2, UPPERCASE) | `DE`, `SE`, `DE-BE` |
+| `language` | No | Language code (default: `de`) | `de`, `en`, `sv` |
 | `wikidataID` | Conditional | Wikidata Q-ID | `Q567` |
 | `id` | Conditional | OPTV internal document ID | `12345` |
-| `dipID` | Conditional | DIP Bundestag document ID | `278452` |
+| `documentID` | Conditional | Parliament-native document ID (canonical) | `278452` |
+| `dipID` | Conditional | **Deprecated** — alias for `documentID` (DE only) | `278452` |
 | `sourceURI` | Conditional | PDF source URL | `https://dserver.bundestag.de/btd/19/12345.pdf` |
-| `parliament` | No | Parliament shortcode for faction mapping | `de` |
 | `thumbWidth` | No | Thumbnail width in pixels (default: `300`) | `200` |
 | `key` | Conditional | API key (if access control enabled) | `abc123` |
 | `nocache` | No | Force a fresh fetch and refresh the cache (requires a valid `key` when access control is on) | `1` |

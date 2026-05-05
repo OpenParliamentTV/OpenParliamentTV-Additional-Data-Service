@@ -16,8 +16,16 @@ require_once __DIR__ . '/src/Api/WikidataRestClient.php';
 require_once __DIR__ . '/src/Api/WikidataActionClient.php';
 require_once __DIR__ . '/src/Api/WikipediaClient.php';
 require_once __DIR__ . '/src/Api/WikimediaCommonsClient.php';
-require_once __DIR__ . '/src/Api/AbgeordnetenwatchClient.php';
-require_once __DIR__ . '/src/Api/DipBundestagClient.php';
+require_once __DIR__ . '/src/Api/DE/AbgeordnetenwatchClient.php';
+require_once __DIR__ . '/src/Api/DE/DipBundestagClient.php';
+require_once __DIR__ . '/src/Api/SE/RiksdagClient.php';
+require_once __DIR__ . '/src/Provider/MemberFactionProviderInterface.php';
+require_once __DIR__ . '/src/Provider/OfficialDocumentProviderInterface.php';
+require_once __DIR__ . '/src/Provider/ProviderFactory.php';
+require_once __DIR__ . '/src/Provider/DE/AbgeordnetenwatchFactionProvider.php';
+require_once __DIR__ . '/src/Provider/DE/DipBundestagDocumentProvider.php';
+require_once __DIR__ . '/src/Provider/SE/RiksdagFactionProvider.php';
+require_once __DIR__ . '/src/Provider/SE/RiksdagDocumentProvider.php';
 require_once __DIR__ . '/src/Handler/PersonHandler.php';
 require_once __DIR__ . '/src/Handler/OrganisationHandler.php';
 require_once __DIR__ . '/src/Handler/OfficialDocumentHandler.php';
@@ -27,6 +35,7 @@ require_once __DIR__ . '/src/Cache/ResponseCache.php';
 $input = $_REQUEST;
 $input['thumbWidth'] = !empty($input['thumbWidth']) ? $input['thumbWidth'] : ($config['thumb']['defaultWidth'] ?? '300');
 $input['language']   = strtolower(!empty($input['language']) ? $input['language'] : ($config['thumb']['defaultLanguage'] ?? 'de'));
+$input['parliament'] = !empty($input['parliament']) ? strtoupper($input['parliament']) : null;
 
 // Process request
 $response = processRequest($input, $config);
@@ -52,6 +61,14 @@ function processRequest(array $input, array $config): array
         return ApiResponse::error('wrong or missing parameter', 'type');
     }
 
+    // Validate parliament (required, must be a configured parliament)
+    if (empty($input['parliament'])) {
+        return ApiResponse::error('wrong or missing parameter', 'parliament');
+    }
+    if (empty($config['parliaments'][$input['parliament']])) {
+        return ApiResponse::error('unknown parliament', 'parliament');
+    }
+
     // Cache setup
     $cache       = null;
     $cacheKey    = null;
@@ -72,7 +89,7 @@ function processRequest(array $input, array $config): array
         $cacheParams = array_filter(
             array_intersect_key(
                 $input,
-                array_flip(['type', 'language', 'wikidataID', 'thumbWidth', 'parliament', 'dipID', 'sourceURI', 'id'])
+                array_flip(['type', 'language', 'wikidataID', 'thumbWidth', 'parliament', 'documentID', 'dipID', 'sourceURI', 'id'])
             ),
             fn($v) => $v !== null && $v !== ''
         );
@@ -93,12 +110,14 @@ function processRequest(array $input, array $config): array
     $wikiClient    = new WikipediaClient($userAgent);
     $commonsClient = new WikimediaCommonsClient($userAgent);
 
+    $factory = new ProviderFactory($config, $userAgent, $restClient, new FactionMapper());
+
     // Route to handler
     switch ($input['type']) {
         case 'person':
         case 'memberOfParliament':
-            $awClient = new AbgeordnetenwatchClient($userAgent);
-            $handler  = new PersonHandler($restClient, $actionClient, $wikiClient, $commonsClient, $awClient);
+            $factionProvider = $factory->makeFactionProvider($input['parliament']);
+            $handler         = new PersonHandler($restClient, $actionClient, $wikiClient, $commonsClient, $factionProvider);
             break;
 
         case 'organisation':
@@ -108,8 +127,11 @@ function processRequest(array $input, array $config): array
             break;
 
         case 'officialDocument':
-            $dipClient = new DipBundestagClient($config['dip-key'] ?? '', $userAgent);
-            $handler   = new OfficialDocumentHandler($dipClient, $config['optvAPI'] ?? '');
+            $docProvider = $factory->makeDocumentProvider($input['parliament']);
+            if ($docProvider === null) {
+                return ApiResponse::error('officialDocument not supported for ' . $input['parliament'], 'parliament');
+            }
+            $handler = new OfficialDocumentHandler($docProvider, $factory->getOptvApiUrl($input['parliament']));
             break;
 
         default:
