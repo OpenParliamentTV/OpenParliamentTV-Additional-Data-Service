@@ -1,0 +1,508 @@
+openapi: 3.1.0
+info:
+  title: OpenParliamentTV Additional Data Service
+  version: "1.0"
+  description: |
+    Enriches OpenParliamentTV platform data from Wikidata, Wikipedia,
+    Wikimedia Commons, and per-parliament sources (Abgeordnetenwatch and the
+    DIP Bundestag document database for `DE`; future parliaments register
+    additional providers).
+
+    All requests share a single endpoint. The `type` parameter selects the
+    handler; the `parliament` parameter (required) selects the source
+    backends used by parliament-specific types (`memberOfParliament`,
+    `officialDocument`).
+
+    Parliament codes follow ISO 3166 Alpha-2 UPPERCASE (e.g. `DE`, `SE`,
+    `DE-BE`). See SHORTCODES.md in the architecture repo.
+  license:
+    name: ODC Open Database License (ODbL) v1.0
+    url: https://opendatacommons.org/licenses/odbl/1-0/
+
+servers:
+  - url: https://{host}
+    variables:
+      host:
+        default: example.com
+        description: Deployment host (e.g. `de.openparliament.tv/ads`)
+
+paths:
+  /:
+    get:
+      summary: Look up enriched data for an entity or document
+      description: |
+        Routes by `type`. All requests require `parliament`. Successful
+        responses share the `meta` envelope and place payload in `data`;
+        errors place messages in `errors`.
+      parameters:
+        - $ref: '#/components/parameters/Type'
+        - $ref: '#/components/parameters/Parliament'
+        - $ref: '#/components/parameters/Language'
+        - $ref: '#/components/parameters/WikidataID'
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/DocumentID'
+        - $ref: '#/components/parameters/DipID'
+        - $ref: '#/components/parameters/SourceURI'
+        - $ref: '#/components/parameters/ThumbWidth'
+        - $ref: '#/components/parameters/Key'
+        - $ref: '#/components/parameters/Nocache'
+      responses:
+        '200':
+          description: |
+            Application-level success or error. HTTP is always 200; the
+            `meta.requestStatus` field discriminates.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SuccessPerson'
+                  - $ref: '#/components/schemas/SuccessMemberOfParliament'
+                  - $ref: '#/components/schemas/SuccessOrganisation'
+                  - $ref: '#/components/schemas/SuccessOfficialDocument'
+                  - $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                personSuccess:
+                  $ref: '#/components/examples/PersonSuccess'
+                memberOfParliamentSuccessDE:
+                  $ref: '#/components/examples/MemberOfParliamentSuccess'
+                memberOfParliamentSuccessSE:
+                  $ref: '#/components/examples/MemberOfParliamentSuccessSE'
+                officialDocumentSuccessDE:
+                  $ref: '#/components/examples/OfficialDocumentSuccess'
+                officialDocumentSuccessSE:
+                  $ref: '#/components/examples/OfficialDocumentSuccessSE'
+                errorMissingParliament:
+                  $ref: '#/components/examples/ErrorMissingParliament'
+                errorUnknownParliament:
+                  $ref: '#/components/examples/ErrorUnknownParliament'
+
+components:
+  parameters:
+    Type:
+      name: type
+      in: query
+      required: true
+      description: Selects the handler.
+      schema:
+        type: string
+        enum:
+          - person
+          - memberOfParliament
+          - organisation
+          - term
+          - legalDocument
+          - officialDocument
+
+    Parliament:
+      name: parliament
+      in: query
+      required: true
+      description: |
+        ISO 3166 Alpha-2 (or subdivision) parliament shortcode. Always
+        UPPERCASE. The deployment must have a matching entry under
+        `$config['parliaments']`. Currently shipped: `DE`, `SE`.
+
+        **Per-parliament behaviour notes:**
+        - `DE`: faction is resolved via Abgeordnetenwatch and may differ from
+          the party (e.g. CDU + CSU MPs share the CDU/CSU-Fraktion).
+        - `SE`: the Riksdag has no separate parliamentary group concept;
+          `factionID`/`factionLabel` mirror `partyID`/`party`.
+      schema:
+        type: string
+        pattern: '^[A-Z]{2}(-[A-Z0-9]{1,3})?$'
+        examples: [DE, SE, DE-BE]
+
+    Language:
+      name: language
+      in: query
+      required: false
+      description: ISO 639 Alpha-2 language code (lowercase). Affects labels and Wikipedia lookup.
+      schema:
+        type: string
+        default: de
+        examples: [de, en, sv]
+
+    WikidataID:
+      name: wikidataID
+      in: query
+      required: false
+      description: |
+        Wikidata Q-ID. Required for `person`, `memberOfParliament`,
+        `organisation`, `term`, `legalDocument`. Not used for
+        `officialDocument`.
+      schema:
+        type: string
+        pattern: '^Q\d+$'
+        examples: [Q567]
+
+    Id:
+      name: id
+      in: query
+      required: false
+      description: |
+        OPTV-internal document ID (used only for `officialDocument`). The
+        service queries `<optvAPI>/document/<id>` to resolve to the
+        parliament's native `documentID`.
+      schema:
+        type: string
+
+    DocumentID:
+      name: documentID
+      in: query
+      required: false
+      description: |
+        Parliament-native document identifier (canonical name). For DE this
+        is the Drucksache number; for SE it is the Riksdag dokument-ID.
+      schema:
+        type: string
+
+    DipID:
+      name: dipID
+      in: query
+      required: false
+      deprecated: true
+      description: |
+        DEPRECATED. Use `documentID` instead. Kept for one release as a
+        backwards-compatible alias for DE-only document lookups.
+      schema:
+        type: string
+
+    SourceURI:
+      name: sourceURI
+      in: query
+      required: false
+      description: |
+        URL of the original document. Used as a fallback to resolve
+        `officialDocument` when neither `id` nor `documentID` is provided.
+        For DE, the filename portion is parsed into a Drucksache number.
+      schema:
+        type: string
+        format: uri
+
+    ThumbWidth:
+      name: thumbWidth
+      in: query
+      required: false
+      description: Thumbnail width in pixels (Wikimedia Commons).
+      schema:
+        type: integer
+        default: 300
+
+    Key:
+      name: key
+      in: query
+      required: false
+      description: API key. Required only when the deployment sets `$config["accessNeedsKey"] = true`.
+      schema:
+        type: string
+
+    Nocache:
+      name: nocache
+      in: query
+      required: false
+      description: |
+        When set to `1`, bypasses the response cache and refreshes it on
+        successful lookup. Only honoured when API-key auth is enabled.
+      schema:
+        type: string
+        enum: ['1']
+
+  schemas:
+    Meta:
+      type: object
+      required: [api, requestStatus]
+      properties:
+        api:
+          type: object
+          properties:
+            version: { type: string, example: "1.0" }
+            documentation: { type: string, format: uri }
+            license:
+              type: object
+              properties:
+                label: { type: string }
+                link: { type: string, format: uri }
+        requestStatus:
+          type: string
+          enum: [success, error]
+
+    WikipediaLink:
+      type: object
+      properties:
+        title: { type: string, nullable: true }
+        url:   { type: string, format: uri, nullable: true }
+
+    SocialMediaID:
+      type: object
+      properties:
+        label:
+          type: string
+          enum: [Instagram, Facebook, Twitter, Mastodon, Youtube, Xing]
+        id: { type: string }
+
+    PersonData:
+      type: object
+      properties:
+        type: { type: string, enum: [person, memberOfParliament] }
+        id:   { type: string, description: Wikidata Q-ID }
+        label: { type: string }
+        labelAlternative:
+          type: array
+          items: { type: string }
+        firstName:  { type: string, nullable: true }
+        lastName:   { type: string, nullable: true }
+        degree:     { type: string }
+        degreeFull: { type: string, nullable: true }
+        gender:
+          type: string
+          nullable: true
+          description: Mapped from Wikidata Q-IDs via WikidataProperties::GENDER_MAP.
+          enum: [male, female, inter, null]
+        birthDate:  { type: string, nullable: true, description: Raw Wikidata time string. }
+        deathDate:  { type: string, nullable: true }
+        websiteURI: { type: string }
+        thumbnailURI:     { type: string, nullable: true }
+        thumbnailCreator: { type: string, nullable: true, description: HTML from Commons (anchors preserved). }
+        thumbnailLicense: { type: string, nullable: true }
+        socialMediaIDs:
+          type: array
+          items: { $ref: '#/components/schemas/SocialMediaID' }
+        abstract:
+          type: string
+          nullable: true
+          description: Wikipedia summary in the requested language.
+        additionalInformation:
+          type: object
+          properties:
+            wikipedia: { $ref: '#/components/schemas/WikipediaLink' }
+            abgeordnetenwatchID:
+              type: string
+              description: Only present for DE persons with a Wikidata abgeordnetenwatch ID (P12999).
+
+    MemberOfParliamentData:
+      allOf:
+        - $ref: '#/components/schemas/PersonData'
+        - type: object
+          properties:
+            partyID:      { type: string, nullable: true }
+            party:        { type: string, nullable: true }
+            factionID:
+              type: string
+              nullable: true
+              description: |
+                Wikidata Q-ID of the parliamentary faction. For SE this
+                mirrors `partyID` because the Riksdag has no separate
+                parliamentary group concept. Set only when a parliament-
+                specific provider is configured and the lookup applies.
+            factionLabel:
+              type: string
+              nullable: true
+              description: Human-readable faction label.
+
+    OrganisationData:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [organisation, term, legalDocument]
+        id: { type: string }
+        label: { type: string }
+        labelAlternative:
+          type: array
+          items: { type: string }
+        abstract: { type: string, nullable: true }
+        websiteURI: { type: string }
+        socialMediaIDs:
+          type: array
+          items: { $ref: '#/components/schemas/SocialMediaID' }
+        additionalInformation:
+          type: object
+          properties:
+            wikipedia: { $ref: '#/components/schemas/WikipediaLink' }
+        sourceURI:
+          type: string
+          format: uri
+          description: Only present for `legalDocument`.
+
+    OfficialDocumentData:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [officialDocument] }
+        label: { type: string }
+        labelAlternative:
+          type: array
+          items: { type: string }
+        sourceURI: { type: string, format: uri, nullable: true }
+        additionalInformation:
+          type: object
+          properties:
+            originID: { type: string }
+            subType: { type: string, nullable: true }
+            date: { type: string, nullable: true }
+            electoralPeriod:
+              oneOf:
+                - { type: integer }
+                - { type: string }
+              nullable: true
+              description: Integer for DE (e.g. `20`); Riksmöte string for SE (e.g. `"2025/26"`).
+            creator:
+              oneOf:
+                - { type: string }
+                - { type: array, items: { type: string } }
+              nullable: true
+            author: { type: array, items: { type: string }, nullable: true }
+            procedureIDs:
+              type: array
+              items: { type: object }
+              nullable: true
+        _sourceItem:
+          type: object
+          description: Raw upstream document payload (DIP/Riksdag/etc.).
+
+    SuccessPerson:
+      type: object
+      required: [meta, data]
+      properties:
+        meta: { $ref: '#/components/schemas/Meta' }
+        data: { $ref: '#/components/schemas/PersonData' }
+
+    SuccessMemberOfParliament:
+      type: object
+      required: [meta, data]
+      properties:
+        meta: { $ref: '#/components/schemas/Meta' }
+        data: { $ref: '#/components/schemas/MemberOfParliamentData' }
+
+    SuccessOrganisation:
+      type: object
+      required: [meta, data]
+      properties:
+        meta: { $ref: '#/components/schemas/Meta' }
+        data: { $ref: '#/components/schemas/OrganisationData' }
+
+    SuccessOfficialDocument:
+      type: object
+      required: [meta, data]
+      properties:
+        meta: { $ref: '#/components/schemas/Meta' }
+        data: { $ref: '#/components/schemas/OfficialDocumentData' }
+
+    ErrorResponse:
+      type: object
+      required: [meta, errors]
+      properties:
+        meta: { $ref: '#/components/schemas/Meta' }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              info: { type: string }
+              field: { type: string, description: Single offending parameter. }
+              fields: { type: string, description: Comma-separated parameter list (officialDocument missing-param case). }
+              code: { type: string, description: Upstream HTTP status (officialDocument provider errors). }
+
+  examples:
+    PersonSuccess:
+      summary: Person lookup (Wikidata-only)
+      value:
+        meta:
+          api: { version: "1.0", documentation: "https://github.com/...", license: { label: "ODbL v1.0", link: "https://opendatacommons.org/licenses/odbl/1-0/" } }
+          requestStatus: success
+        data:
+          type: person
+          id: Q567
+          label: Angela Merkel
+          labelAlternative: []
+          firstName: Angela
+          lastName: Merkel
+          degree: Dr.
+          degreeFull: Doktor der Naturwissenschaften
+          gender: female
+          birthDate: "+1954-07-17T00:00:00Z"
+          deathDate: null
+          websiteURI: ""
+          socialMediaIDs: []
+          additionalInformation:
+            wikipedia: { title: "Angela Merkel", url: "https://de.wikipedia.org/wiki/Angela_Merkel" }
+
+    MemberOfParliamentSuccess:
+      summary: MoP lookup (DE) — adds party + faction
+      value:
+        meta: { requestStatus: success }
+        data:
+          type: memberOfParliament
+          id: Q567
+          label: Angela Merkel
+          partyID: Q49762
+          party: CDU
+          factionID: Q1387991
+          factionLabel: CDU/CSU
+
+    OfficialDocumentSuccess:
+      summary: Official document lookup (DE) — government Gesetzentwurf
+      value:
+        meta: { requestStatus: success }
+        data:
+          id: "278960"
+          type: officialDocument
+          label: "Drucksache 92/25"
+          labelAlternative: ["Entwurf eines Fünften Gesetzes zur Änderung des Straßenverkehrsgesetzes und anderer straßenverkehrsrechtlicher Vorschriften"]
+          sourceURI: "https://dserver.bundestag.de/brd/2025/0092-25.pdf"
+          additionalInformation:
+            originID: "278960"
+            subType: Gesetzentwurf
+            date: "2025-02-28"
+            electoralPeriod: 20
+            creator: ["Bundesregierung"]
+            procedureIDs:
+              - id: "320732"
+                titel: "Fünftes Gesetz zur Änderung des Straßenverkehrsgesetzes und anderer straßenverkehrsrechtlicher Vorschriften"
+                vorgangstyp: Gesetzgebung
+
+    MemberOfParliamentSuccessSE:
+      summary: MoP lookup (SE) — factionID/factionLabel mirror partyID/party
+      value:
+        meta: { requestStatus: success }
+        data:
+          type: memberOfParliament
+          id: Q911372
+          label: Jan Björklund
+          partyID: Q110857
+          party: Liberalerna
+          factionID: Q110857
+          factionLabel: Liberalerna
+
+    OfficialDocumentSuccessSE:
+      summary: Official document lookup (SE) — Riksdag motion
+      value:
+        meta: { requestStatus: success }
+        data:
+          id: HD024141
+          type: officialDocument
+          label: "mot 2025/26:4141"
+          labelAlternative: ["med anledning av prop. 2025/26:242 Ett tydligt regelverk för aktivt skogsbruk"]
+          sourceURI: "https://data.riksdagen.se/dokument/HD024141"
+          additionalInformation:
+            originID: HD024141
+            subType: Kommittémotion
+            date: "2026-05-04"
+            electoralPeriod: "2025/26"
+            creator: MJU
+
+    ErrorMissingParliament:
+      summary: Missing required `parliament`
+      value:
+        meta: { requestStatus: error }
+        errors:
+          - info: wrong or missing parameter
+            field: parliament
+
+    ErrorUnknownParliament:
+      summary: Parliament code not configured on this deployment
+      value:
+        meta: { requestStatus: error }
+        errors:
+          - info: unknown parliament
+            field: parliament
