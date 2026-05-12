@@ -32,7 +32,7 @@ class OrganisationHandler
 
         // Main label
         $labels = $item['labels'] ?? [];
-        $mainLabel = $labels[$language] ?? $labels['en'] ?? (!empty($labels) ? reset($labels) : '');
+        $mainLabel = $labels[$language] ?? $labels['en'] ?? $labels['mul'] ?? (!empty($labels) ? reset($labels) : '');
         $data['label'] = $mainLabel;
         $data['labelAlternative'] = [];
 

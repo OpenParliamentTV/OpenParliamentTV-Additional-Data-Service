@@ -107,6 +107,7 @@ class WikidataRestClient
 
         return $labels[$language]
             ?? $labels['en']
+            ?? $labels['mul']
             ?? (!empty($labels) ? reset($labels) : null);
     }
 

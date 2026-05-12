@@ -54,7 +54,7 @@ class PersonHandler
 
         // Label with fallback
         $labels = $item['labels'] ?? [];
-        $data['label'] = $labels[$language] ?? $labels['en'] ?? (!empty($labels) ? reset($labels) : '');
+        $data['label'] = $labels[$language] ?? $labels['en'] ?? $labels['mul'] ?? (!empty($labels) ? reset($labels) : '');
 
         // Aliases
         $data['labelAlternative'] = [];
