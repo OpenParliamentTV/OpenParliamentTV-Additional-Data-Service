@@ -35,7 +35,8 @@ require_once __DIR__ . '/src/Cache/ResponseCache.php';
 $input = $_REQUEST;
 $input['thumbWidth'] = !empty($input['thumbWidth']) ? $input['thumbWidth'] : ($config['thumb']['defaultWidth'] ?? '300');
 $input['language']   = strtolower(!empty($input['language']) ? $input['language'] : ($config['thumb']['defaultLanguage'] ?? 'de'));
-$input['parliament'] = !empty($input['parliament']) ? strtoupper($input['parliament']) : null;
+// Temporary default: callers may omit parliament (DE-only consumers); remove when all clients send parliament.
+$input['parliament'] = !empty($input['parliament']) ? strtoupper($input['parliament']) : 'DE';
 
 // Process request
 $response = processRequest($input, $config);
@@ -61,10 +62,7 @@ function processRequest(array $input, array $config): array
         return ApiResponse::error('wrong or missing parameter', 'type');
     }
 
-    // Validate parliament (required, must be a configured parliament)
-    if (empty($input['parliament'])) {
-        return ApiResponse::error('wrong or missing parameter', 'parliament');
-    }
+    // Validate parliament (must be a configured parliament; omitted → DE, see normalization above)
     if (empty($config['parliaments'][$input['parliament']])) {
         return ApiResponse::error('unknown parliament', 'parliament');
     }

@@ -20,7 +20,7 @@ return [
     [],                                                                                                      // missing type
     ['type' => 'person',           'parliament' => 'DE', 'wikidataID' => 'INVALID'],                         // bad ID format
     ['type' => 'person',           'parliament' => 'DE', 'wikidataID' => 'Q99999999999'],                    // non-existent entity
-    ['type' => 'person',                                'wikidataID' => 'Q567'],                             // missing parliament
+    ['type' => 'person',                                'wikidataID' => 'Q567'],                             // omitted parliament → DE default
     ['type' => 'person',           'parliament' => 'XX', 'wikidataID' => 'Q567'],                            // unknown parliament
     ['type' => 'officialDocument', 'parliament' => 'SE', 'documentID' => 'NONEXISTENT'],                     // SE doc not found
 ];
