@@ -45,9 +45,14 @@ class OrganisationHandler
             }
         }
 
-        // Aliases
-        foreach (($item['aliases'][$language] ?? []) as $alias) {
-            if ($alias !== $data['label'] && !in_array($alias, $data['labelAlternative'])) {
+        // Aliases — merge requested language, English, and language-agnostic (mul), dedup, skip label
+        $aliasBuckets = array_merge(
+            $item['aliases'][$language] ?? [],
+            $item['aliases']['en']      ?? [],
+            $item['aliases']['mul']     ?? []
+        );
+        foreach ($aliasBuckets as $alias) {
+            if ($alias !== $data['label'] && !in_array($alias, $data['labelAlternative'], true)) {
                 $data['labelAlternative'][] = $alias;
             }
         }

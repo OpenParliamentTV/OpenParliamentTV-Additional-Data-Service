@@ -56,10 +56,17 @@ class PersonHandler
         $labels = $item['labels'] ?? [];
         $data['label'] = $labels[$language] ?? $labels['en'] ?? $labels['mul'] ?? (!empty($labels) ? reset($labels) : '');
 
-        // Aliases
+        // Aliases — merge requested language, English, and language-agnostic (mul), dedup, skip label
+        $aliasBuckets = array_merge(
+            $item['aliases'][$language] ?? [],
+            $item['aliases']['en']      ?? [],
+            $item['aliases']['mul']     ?? []
+        );
         $data['labelAlternative'] = [];
-        foreach (($item['aliases'][$language] ?? []) as $alias) {
-            $data['labelAlternative'][] = $alias;
+        foreach ($aliasBuckets as $alias) {
+            if ($alias !== $data['label'] && !in_array($alias, $data['labelAlternative'], true)) {
+                $data['labelAlternative'][] = $alias;
+            }
         }
 
         // Names from batch
