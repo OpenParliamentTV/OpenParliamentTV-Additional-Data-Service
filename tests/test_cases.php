@@ -16,6 +16,10 @@ return [
     ['type' => 'officialDocument',   'parliament' => 'SE', 'documentID' => 'HD024141'],
     ['type' => 'memberOfParliament', 'parliament' => 'SE', 'wikidataID' => 'Q937',    'language' => 'sv'],  // no P1214 — graceful degradation
 
+    // AT — Nationalrat faction via parlament.gv.at
+    ['type' => 'memberOfParliament', 'parliament' => 'AT', 'wikidataID' => 'Q85433',  'language' => 'de'],  // Doris Bures — current SPÖ MP
+    ['type' => 'memberOfParliament', 'parliament' => 'AT', 'wikidataID' => 'Q937',    'language' => 'de'],  // no P2280 — graceful degradation
+
     // Error cases
     [],                                                                                                      // missing type
     ['type' => 'person',           'parliament' => 'DE', 'wikidataID' => 'INVALID'],                         // bad ID format

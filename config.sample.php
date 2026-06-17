@@ -41,7 +41,8 @@ $config["dip-key"] = "";
  * parliament shortcode (ISO 3166 Alpha-2 UPPERCASE — see SHORTCODES.md).
  *
  * `providers.memberFaction` selects the faction-resolution backend used by
- * `memberOfParliament` requests. Supported values: "abgeordnetenwatch".
+ * `memberOfParliament` requests. Supported values: "abgeordnetenwatch",
+ * "riksdag", "parlamentAt".
  *
  * `providers.officialDocument` selects the official-document backend used by
  * `officialDocument` requests. Supported values: "dipBundestag".
@@ -71,6 +72,14 @@ $config["parliaments"]["SE"] = [
     ],
     "apiKeys" => [],  // Riksdag open data is keyless
     // "optvAPI" => "https://se.openparliament.tv/api/v1/",
+];
+
+$config["parliaments"]["AT"] = [
+    "providers" => [
+        "memberFaction" => "parlamentAt",
+    ],
+    "apiKeys" => [],
+    // "optvAPI" => "https://at.openparliament.tv/api/v1/",
 ];
 
 

@@ -67,6 +67,8 @@ paths:
                   $ref: '#/components/examples/MemberOfParliamentSuccess'
                 memberOfParliamentSuccessSE:
                   $ref: '#/components/examples/MemberOfParliamentSuccessSE'
+                memberOfParliamentSuccessAT:
+                  $ref: '#/components/examples/MemberOfParliamentSuccessAT'
                 officialDocumentSuccessDE:
                   $ref: '#/components/examples/OfficialDocumentSuccess'
                 officialDocumentSuccessSE:
@@ -100,17 +102,20 @@ components:
       description: |
         ISO 3166 Alpha-2 (or subdivision) parliament shortcode. Always
         UPPERCASE. The deployment must have a matching entry under
-        `$config['parliaments']`. Currently shipped: `DE`, `SE`.
+        `$config['parliaments']`. Currently shipped: `DE`, `SE`, `AT`.
 
         **Per-parliament behaviour notes:**
         - `DE`: faction is resolved via Abgeordnetenwatch and may differ from
           the party (e.g. CDU + CSU MPs share the CDU/CSU-Fraktion).
         - `SE`: the Riksdag has no separate parliamentary group concept;
           `factionID`/`factionLabel` mirror `partyID`/`party`.
+        - `AT`: faction (Klub) is resolved via parlament.gv.at Open Data using
+          Wikidata P2280 (Austrian Parliament ID). Current Nationalrat members
+          only; `factionLabel` is the official klub name.
       schema:
         type: string
         pattern: '^[A-Z]{2}(-[A-Z0-9]{1,3})?$'
-        examples: [DE, SE, DE-BE]
+        examples: [DE, SE, AT, DE-BE]
 
     Language:
       name: language
@@ -473,6 +478,19 @@ components:
           party: Liberalerna
           factionID: Q110857
           factionLabel: Liberalerna
+
+    MemberOfParliamentSuccessAT:
+      summary: MoP lookup (AT) — faction resolved via parlament.gv.at klub
+      value:
+        meta: { requestStatus: success }
+        data:
+          type: memberOfParliament
+          id: Q85433
+          label: Doris Bures
+          partyID: Q179111
+          party: Sozialdemokratische Partei Österreichs
+          factionID: Q37994784
+          factionLabel: Die Sozialdemokratische Parlamentsfraktion
 
     OfficialDocumentSuccessSE:
       summary: Official document lookup (SE) — Riksdag motion

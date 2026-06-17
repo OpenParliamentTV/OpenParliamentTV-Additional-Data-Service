@@ -31,6 +31,7 @@ class WikidataProperties
     const GESETZE_IM_INTERNET = 'P7677';
     const BUZER               = 'P9696';
     const RIKSDAGEN           = 'P1214';
+    const AUSTRIAN_PARLIAMENT = 'P2280';
 
     // Gender Q-IDs
     const GENDER_MALE         = 'Q6581097';

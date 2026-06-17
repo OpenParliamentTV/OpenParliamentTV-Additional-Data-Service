@@ -35,6 +35,11 @@ class ProviderFactory
                 new RiksdagClient($this->userAgent),
                 $this->factionMapper
             ),
+            'parlamentAt' => new ParlamentAtFactionProvider(
+                $this->restClient,
+                new ParlamentAtClient($this->userAgent),
+                $this->factionMapper
+            ),
             default => null,
         };
 
