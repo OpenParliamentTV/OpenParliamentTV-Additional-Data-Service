@@ -84,9 +84,12 @@ $config["parliaments"]["AT"] = [
 
 
 /**
- * Default width for thumbnails if thumbWidth parameter was not set
+ * Default width for thumbnails if thumbWidth parameter was not set.
+ * Wikimedia Commons only renders a fixed set of thumbnail widths and rejects
+ * others (HTTP 400); 330 is the allowed bucket nearest our ~300px display target.
+ * See https://www.mediawiki.org/wiki/Common_thumbnail_sizes
  */
-$config["thumb"]["defaultWidth"] = "300";
+$config["thumb"]["defaultWidth"] = "330";
 
 /**
  * Default language of no language was given
