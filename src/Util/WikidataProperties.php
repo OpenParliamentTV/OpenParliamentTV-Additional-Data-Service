@@ -17,6 +17,9 @@ class WikidataProperties
     const LOGO          = 'P154';
     const SHORT_NAME    = 'P1813';
 
+    // Document
+    const FULL_WORK_AVAILABLE_AT = 'P953';
+
     // Social media
     const INSTAGRAM     = 'P2003';
     const FACEBOOK      = 'P2013';

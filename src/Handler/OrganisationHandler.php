@@ -106,18 +106,39 @@ class OrganisationHandler
 
         // Legal document source URI
         if ($type === 'legalDocument') {
-            $p7677 = $this->restClient->getPropertyValue($item, WikidataProperties::GESETZE_IM_INTERNET);
-            if ($p7677 !== null) {
-                $data['sourceURI'] = 'http://www.gesetze-im-internet.de/' . $p7677 . '/';
-            } else {
-                $p9696 = $this->restClient->getPropertyValue($item, WikidataProperties::BUZER);
-                if ($p9696 !== null) {
-                    $data['sourceURI'] = 'https://www.buzer.de/gesetz/' . $p9696 . '/';
-                }
+            $sourceURI = $this->resolveLegalDocumentSourceURI($item, $data['websiteURI']);
+            if ($sourceURI !== '') {
+                $data['sourceURI'] = $sourceURI;
             }
         }
 
         return ApiResponse::success($data);
+    }
+
+    /**
+     * The platform requires a sourceURI on every document, so fall through from the
+     * most specific source to the least: the German federal statute registers, then
+     * the full text of the work itself, then the official website — the latter two
+     * being the only ones that treaties and foreign law tend to have.
+     */
+    private function resolveLegalDocumentSourceURI(array $item, string $websiteURI): string
+    {
+        $gesetzeImInternet = $this->restClient->getPropertyValue($item, WikidataProperties::GESETZE_IM_INTERNET);
+        if ($gesetzeImInternet !== null) {
+            return 'http://www.gesetze-im-internet.de/' . $gesetzeImInternet . '/';
+        }
+
+        $buzer = $this->restClient->getPropertyValue($item, WikidataProperties::BUZER);
+        if ($buzer !== null) {
+            return 'https://www.buzer.de/gesetz/' . $buzer . '/';
+        }
+
+        $fullWork = $this->restClient->getPropertyValue($item, WikidataProperties::FULL_WORK_AVAILABLE_AT);
+        if ($fullWork !== null) {
+            return $fullWork;
+        }
+
+        return $websiteURI;
     }
 
     private function buildSocialMediaIds(array $item): array

@@ -147,7 +147,7 @@ Requires: `wikidataID`
 }
 ```
 
-`sourceURI` is added for `legalDocument` (built from Wikidata P7677 or P9696).
+`sourceURI` is added for `legalDocument`, taken from the first Wikidata property that is set: P7677 (Gesetze im Internet) → P9696 (Buzer) → P953 (full work available at URL) → P856 (official website). The first two build a German federal statute URL; the latter two carry treaties and foreign law, which appear in neither German register.
 
 #### `officialDocument`
 
