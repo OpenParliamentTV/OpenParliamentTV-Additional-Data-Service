@@ -91,5 +91,8 @@ function fixtureFilename(array $params): string
     // documentID and dipID are aliases — same filename either way.
     $docId = $params['documentID'] ?? $params['dipID'] ?? '';
     if (!empty($docId)) $parts[] = $docId;
+    if (!empty($params['documentNumbers'])) {
+        $parts[] = str_replace(['/', ','], ['-', '+'], $params['documentNumbers']);
+    }
     return implode('_', $parts) . '.json';
 }

@@ -22,6 +22,7 @@ require_once __DIR__ . '/src/Api/SE/RiksdagClient.php';
 require_once __DIR__ . '/src/Api/AT/ParlamentAtClient.php';
 require_once __DIR__ . '/src/Provider/MemberFactionProviderInterface.php';
 require_once __DIR__ . '/src/Provider/OfficialDocumentProviderInterface.php';
+require_once __DIR__ . '/src/Provider/OfficialDocumentBatchProviderInterface.php';
 require_once __DIR__ . '/src/Provider/ProviderFactory.php';
 require_once __DIR__ . '/src/Provider/DE/AbgeordnetenwatchFactionProvider.php';
 require_once __DIR__ . '/src/Provider/DE/DipBundestagDocumentProvider.php';
@@ -69,6 +70,11 @@ function processRequest(array $input, array $config): array
         return ApiResponse::error('unknown parliament', 'parliament');
     }
 
+    // Batch document requests are the always-fresh refresh path: they are never
+    // served from cache and never cached under a batch key. Instead, each item
+    // of a successful batch is written into the single-request cache below.
+    $isBatch = ($input['type'] === 'officialDocument' && !empty($input['documentNumbers']));
+
     // Cache setup
     $cache       = null;
     $cacheKey    = null;
@@ -86,16 +92,9 @@ function processRequest(array $input, array $config): array
 
         $ttl = $config['cache']['ttl'][$input['type']] ?? 86400;
 
-        $cacheParams = array_filter(
-            array_intersect_key(
-                $input,
-                array_flip(['type', 'language', 'wikidataID', 'thumbWidth', 'parliament', 'documentID', 'dipID', 'sourceURI', 'id'])
-            ),
-            fn($v) => $v !== null && $v !== ''
-        );
-        $cacheKey = ResponseCache::makeKey($cacheParams);
+        $cacheKey = ResponseCache::makeKey(buildCacheParams($input));
 
-        if (!$bypassCache) {
+        if (!$bypassCache && !$isBatch) {
             $cached = $cache->get($cacheKey);
             if ($cached !== null) {
                 return $cached;
@@ -142,7 +141,26 @@ function processRequest(array $input, array $config): array
 
     // Post-handler cache logic
     if ($cache !== null && $cacheKey !== null) {
-        if (($response['meta']['requestStatus'] ?? '') === 'success') {
+        if ($isBatch) {
+            // Refresh the single-request cache with every returned item so
+            // future single lookups (keyed by sourceURI) are served from cache.
+            if (($response['meta']['requestStatus'] ?? '') === 'success') {
+                foreach ($response['data'] as $item) {
+                    if (empty($item['sourceURI'])) {
+                        continue;
+                    }
+                    $syntheticInput = [
+                        'type'       => $input['type'],
+                        'parliament' => $input['parliament'],
+                        'language'   => $input['language'],
+                        'thumbWidth' => $input['thumbWidth'],
+                        'sourceURI'  => $item['sourceURI'],
+                    ];
+                    $cache->set(ResponseCache::makeKey(buildCacheParams($syntheticInput)), ApiResponse::success($item), $ttl);
+                }
+            }
+            // No stale fallback for batch errors: there is no batch cache entry.
+        } elseif (($response['meta']['requestStatus'] ?? '') === 'success') {
             // Store on success (also refreshes the cache when bypassCache=true)
             $cache->set($cacheKey, $response, $ttl);
         } elseif (!$bypassCache) {
@@ -155,4 +173,21 @@ function processRequest(array $input, array $config): array
     }
 
     return $response;
+}
+
+/**
+ * Single source of truth for cache key construction: the whitelisted request
+ * params that identify a response. `documentNumbers` is deliberately absent —
+ * batch responses are cached per item under the equivalent single-request key,
+ * never under a batch key.
+ */
+function buildCacheParams(array $input): array
+{
+    return array_filter(
+        array_intersect_key(
+            $input,
+            array_flip(['type', 'language', 'wikidataID', 'thumbWidth', 'parliament', 'documentID', 'dipID', 'sourceURI', 'id'])
+        ),
+        fn($v) => $v !== null && $v !== ''
+    );
 }

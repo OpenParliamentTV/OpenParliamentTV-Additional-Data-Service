@@ -7,8 +7,14 @@ class OfficialDocumentHandler
         private string                            $optvApiUrl
     ) {}
 
+    private const BATCH_MAX_NUMBERS = 100;
+
     public function handle(array $input): array
     {
+        if (!empty($input['documentNumbers'])) {
+            return $this->handleBatch($input['documentNumbers']);
+        }
+
         $id         = $input['id'] ?? '';
         $documentID = $input['documentID'] ?? $input['dipID'] ?? '';
         $sourceURI  = $input['sourceURI'] ?? '';
@@ -40,6 +46,31 @@ class OfficialDocumentHandler
         }
 
         return $this->docProvider->fetch($input);
+    }
+
+    /**
+     * Batch lookup by comma-separated parliament-native document numbers.
+     * Always fetches fresh from the upstream source; the caller (index.php)
+     * writes the per-item results back into the single-request cache.
+     * Number format validation is provider-specific and happens in fetchBatch().
+     */
+    private function handleBatch(string $documentNumbers): array
+    {
+        $numbers = array_values(array_filter(array_map('trim', explode(',', $documentNumbers)), fn($n) => $n !== ''));
+
+        if (empty($numbers)) {
+            return ApiResponse::error('documentNumbers must contain at least one document number', 'documentNumbers');
+        }
+
+        if (count($numbers) > self::BATCH_MAX_NUMBERS) {
+            return ApiResponse::error('documentNumbers exceeds maximum of ' . self::BATCH_MAX_NUMBERS . ' numbers', 'documentNumbers');
+        }
+
+        if (!($this->docProvider instanceof OfficialDocumentBatchProviderInterface)) {
+            return ApiResponse::error('batch lookup not supported for this parliament', 'documentNumbers');
+        }
+
+        return $this->docProvider->fetchBatch($numbers);
     }
 
     private function resolveDocumentIdFromOptvId(string $optvId): ?string

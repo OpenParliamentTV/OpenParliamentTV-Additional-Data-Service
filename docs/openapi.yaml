@@ -43,6 +43,7 @@ paths:
         - $ref: '#/components/parameters/DocumentID'
         - $ref: '#/components/parameters/DipID'
         - $ref: '#/components/parameters/SourceURI'
+        - $ref: '#/components/parameters/DocumentNumbers'
         - $ref: '#/components/parameters/ThumbWidth'
         - $ref: '#/components/parameters/Key'
         - $ref: '#/components/parameters/Nocache'
@@ -59,6 +60,7 @@ paths:
                   - $ref: '#/components/schemas/SuccessMemberOfParliament'
                   - $ref: '#/components/schemas/SuccessOrganisation'
                   - $ref: '#/components/schemas/SuccessOfficialDocument'
+                  - $ref: '#/components/schemas/SuccessOfficialDocumentBatch'
                   - $ref: '#/components/schemas/ErrorResponse'
               examples:
                 personSuccess:
@@ -183,6 +185,23 @@ components:
       schema:
         type: string
         format: uri
+
+    DocumentNumbers:
+      name: documentNumbers
+      in: query
+      required: false
+      description: |
+        Batch lookup for `officialDocument` (currently DE only): comma-separated
+        list of parliament-native document numbers, maximum 100 per request.
+        The number format is parliament-specific (for DE e.g. `20/5653`) and is
+        validated by the parliament's provider. Takes precedence over
+        `id`/`documentID`/`sourceURI`. Batch requests always fetch fresh from
+        the upstream source; each returned item refreshes the corresponding
+        single-request cache entry. `data` is an array of document objects in
+        the single-response shape; numbers without a match simply have no item.
+      schema:
+        type: string
+        example: '20/5653,20/5983,20/5913'
 
     ThumbWidth:
       name: thumbWidth
@@ -361,6 +380,15 @@ components:
               type: array
               items: { type: object }
               nullable: true
+            procedureIDsCount:
+              type: integer
+              description: |
+                True number of linked procedures as reported by the
+                parliament's documentation system. Sources may truncate the
+                embedded procedure list; the service then fetches the complete
+                list separately. If that fetch fails, `procedureIDsCount`
+                remains larger than `procedureIDs` so consumers can detect
+                the truncation.
         _sourceItem:
           type: object
           description: Raw upstream document payload (DIP/Riksdag/etc.).
@@ -392,6 +420,24 @@ components:
       properties:
         meta: { $ref: '#/components/schemas/Meta' }
         data: { $ref: '#/components/schemas/OfficialDocumentData' }
+
+    SuccessOfficialDocumentBatch:
+      type: object
+      required: [meta, data]
+      description: |
+        Response to a `documentNumbers` batch lookup. Each item additionally
+        carries `documentNumber`, the parliament-native number it corresponds
+        to, for correlating results to the requested numbers.
+      properties:
+        meta: { $ref: '#/components/schemas/Meta' }
+        data:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/OfficialDocumentData'
+              - type: object
+                properties:
+                  documentNumber: { type: string, nullable: true }
 
     ErrorResponse:
       type: object

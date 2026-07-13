@@ -8,6 +8,7 @@ return [
     ['type' => 'legalDocument',      'parliament' => 'DE', 'wikidataID' => 'Q105994', 'language' => 'de'],
     ['type' => 'officialDocument',   'parliament' => 'DE', 'dipID'      => '278960'],
     ['type' => 'officialDocument',   'parliament' => 'DE', 'documentID' => '278960'],
+    ['type' => 'officialDocument',   'parliament' => 'DE', 'documentNumbers' => '19/1,19/2'],                 // batch lookup
 
     // SE — Stage B
     ['type' => 'person',             'parliament' => 'SE', 'wikidataID' => 'Q911372', 'language' => 'sv'],  // Jan Björklund
@@ -27,4 +28,6 @@ return [
     ['type' => 'person',                                'wikidataID' => 'Q567'],                             // omitted parliament → DE default
     ['type' => 'person',           'parliament' => 'XX', 'wikidataID' => 'Q567'],                            // unknown parliament
     ['type' => 'officialDocument', 'parliament' => 'SE', 'documentID' => 'NONEXISTENT'],                     // SE doc not found
+    ['type' => 'officialDocument', 'parliament' => 'SE', 'documentNumbers' => '19/1'],                       // batch unsupported for SE
+    ['type' => 'officialDocument', 'parliament' => 'DE', 'documentNumbers' => '19/1,abc'],                   // invalid number token
 ];
